@@ -1,0 +1,9 @@
+Chạy server:  python -m network.server
+
+Chạy terminal trong cmd:   cd "C:\Tự học AI\Game Ludo" ==>  python main.py
+
+
+
+192.168.1.4
+
+127.0.0.1

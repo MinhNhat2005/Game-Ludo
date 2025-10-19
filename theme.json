@@ -1,0 +1,38 @@
+{
+    "defaults":
+    {
+        "colours":
+        {
+            "normal_bg": "#28a745",
+            "hovered_bg": "#218838",
+            "normal_text": "#ffffff",
+            "hovered_text": "#ffffff",
+            "normal_border": "#00000000",
+            "hovered_border": "#00000000"
+        }
+    },
+
+    "button":
+    {
+        "font":
+        {
+            "name": "Arial",
+            "size": "20",
+            "bold": "1"
+        },
+        "misc":
+        {
+            "border_width": "0",
+            "shadow_width": "2"
+        }
+    },
+
+    "#back_button": {
+        "colours": {
+            "normal_bg": "#6c757d",
+            "hovered_bg": "#5a6268",
+            "normal_border": "#00000000",
+            "hovered_border": "#00000000"
+        }
+    }
+}
