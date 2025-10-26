@@ -2,7 +2,7 @@
 import pygame
 pygame.font.init()
 
-WIDTH, HEIGHT = 1000, 830
+WIDTH, HEIGHT = 1100, 830
 CENTER = (WIDTH//2, HEIGHT//2)
 CELL = 50
 

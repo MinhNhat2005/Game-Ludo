@@ -12,7 +12,7 @@ from .settings_view import SettingsView
 from .bot_selection_view import BotSelectionView
 from .create_room_view import CreateRoomView
 from .join_room_view import JoinRoomView
-# (Đảm bảo bạn cũng đã import NetworkGameUI nếu có)
+from utils.sound_manager import SoundManager
 from .network_game_ui import NetworkGameUI
 
 class LudoGUI:
@@ -23,9 +23,12 @@ class LudoGUI:
         self.clock = pygame.time.Clock()
         self.is_running = True
 
+        self.sound_manager = SoundManager()
+
         self.ui_manager = pygame_gui.UIManager((WIDTH, HEIGHT), 'theme.json')
         self.active_view = None
         self.change_screen('menu')
+        self.sound_manager.play_music()
 
     def change_screen(self, screen_name, num_players=4, player_types=None):
         self.ui_manager.clear_and_reset()
@@ -55,9 +58,9 @@ class LudoGUI:
         elif screen_name == 'rules':
             self.active_view = RulesView(self.screen, self.ui_manager)
         elif screen_name == 'settings':
-            self.active_view = SettingsView(self.screen, self.ui_manager)
+            self.active_view = SettingsView(self.screen, self.ui_manager, self.sound_manager)
         elif screen_name == 'game': # Game offline
-            self.active_view = GameUI(self.screen, num_players, player_types)
+            self.active_view = GameUI(self.screen, num_players, player_types, self.sound_manager)
         elif screen_name == 'exit':
             self.is_running = False
 

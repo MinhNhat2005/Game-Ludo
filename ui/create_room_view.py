@@ -24,9 +24,10 @@ class CreateRoomView:
         self.background = pygame.transform.scale(
             pygame.image.load('assets/images/black.png').convert(),
             (WIDTH, HEIGHT)
+        
         )
         try:
-            self.title_font = pygame.font.SysFont('Arial', 50, bold=True)
+            self.title_font = pygame.font.Font('assets/fonts/title_font.ttf', 80)
         except pygame.error: self.title_font = pygame.font.Font(None, 50)
         title_text = self.title_font.render('TẠO PHÒNG MỚI', True, pygame.Color('white'))
         title_rect = title_text.get_rect(center=(WIDTH // 2, 100))

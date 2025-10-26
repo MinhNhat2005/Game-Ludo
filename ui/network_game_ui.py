@@ -19,6 +19,7 @@ class NetworkGameUI:
         self.screen = screen
         self.is_running = True
         self.clock = pygame.time.Clock() # Thêm clock
+        self.back_button_rect = self.board_view.back_button_rect
         # Sử dụng MAX_PLAYERS đã import
         dummy_gm = GameManager(num_players=MAX_PLAYERS) 
         self.board_view = BoardView(screen, dummy_gm, dummy_gm.players)
@@ -34,11 +35,20 @@ class NetworkGameUI:
     # Trong file ui/network_game_ui.py
 
     def handle_events(self, event):
+        
         # Chỉ xử lý input nếu client đang kết nối
         if not client.is_client_connected():
             # In ra nếu không kết nối được
             if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = event.pos
                 print("DEBUG: Clicked but not connected.")
+                
+                if self.back_button_rect.collidepoint(mouse_pos):
+                    print("NetworkGameUI: Nút Quay Lại được nhấn!")
+                    client.disconnect_from_server() # Ngắt kết nối
+                    self.is_running = False
+                    self.next_screen = 'online_lobby' # Quay về sảnh online
+                    return # Dừng xử lý
             return
 
         game_state = client.get_current_game_state()

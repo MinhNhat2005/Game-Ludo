@@ -12,8 +12,8 @@ class MenuView:
 
         # --- TẢI HÌNH NỀN VÀ FONT CHỮ ---
         self.background = pygame.transform.scale(pygame.image.load('assets/images/background.png').convert(), (WIDTH, HEIGHT))
-      # self.title_font = pygame.font.Font('assets/fonts/title_font.ttf', 80)
-        self.title_font = pygame.font.SysFont('Arial', 80, bold=True)
+        self.title_font = pygame.font.Font('assets/fonts/title_font.ttf', 80)
+        #self.title_font = pygame.font.SysFont('Arial', 80, bold=True)
 
         # --- VẼ TIÊU ĐỀ LÊN BACKGROUND ---
         title_text = self.title_font.render('Cờ Cá Ngựa', True, pygame.Color('white'))
