@@ -80,15 +80,22 @@ class LudoGUI:
                 if hasattr(self.active_view, 'is_running') and not self.active_view.is_running:
                     next_screen = self.active_view.next_screen
                     if next_screen:
+                        num_players = 4 # Mặc định
+                        player_types = None # Mặc định
+
                         if isinstance(self.active_view, PlayerSelectionView) and next_screen == 'game':
                             num_players = self.active_view.num_players
                             player_types = ['human'] * num_players
-                            self.change_screen(next_screen, num_players=num_players, player_types=player_types)
+                        
+                        # --- SỬA LẠI KHỐI NÀY ---
                         elif isinstance(self.active_view, BotSelectionView) and next_screen == 'game':
-                            player_types = ['human', 'bot'] # Default: 1 Human vs 1 Bot
-                            self.change_screen(next_screen, num_players=2, player_types=player_types)
-                        else:
-                            self.change_screen(next_screen)
+                            difficulty = self.active_view.bot_difficulty # Lấy độ khó
+                            # Giả sử: Người 1 là Human, Người 2 là Bot
+                            num_players = 2 
+                            player_types = ['human', difficulty] # Truyền 'bot_easy' hoặc 'bot_hard'
+                        # -----------------------
+                        
+                        self.change_screen(next_screen, num_players=num_players, player_types=player_types)
                         continue
 
             if self.active_view:

@@ -2,7 +2,7 @@
 import random
 import logging # Thêm logging
 
-class BotPlayer:
+class RandomBot:
     def __init__(self, player_id, game_manager):
         self.player_id = player_id
         self.gm = game_manager # gm là GameManager

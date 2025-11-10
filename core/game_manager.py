@@ -3,7 +3,8 @@ import logging
 from core.piece import Piece
 from core.board import Board
 from . import rules
-from ai.bot_logic import BotPlayer # Đảm bảo import BotPlayer
+from ai.random_bot import RandomBot 
+from ai.hard_bot import HardBot
 from utils.constants import WIDTH, HEIGHT, CELL
 
 class GameManager:
@@ -29,8 +30,12 @@ class GameManager:
     def _init_bots(self):
         bots = {}
         for pid, ptype in enumerate(self.player_types):
-            if ptype == 'bot':
-                bots[pid] = BotPlayer(pid, self) # Truyền self (GameManager) vào Bot
+            if ptype == 'bot_easy': # Nếu là bot dễ
+                logging.info(f"Khởi tạo Bot Dễ cho Người chơi {pid + 1}")
+                bots[pid] = RandomBot(pid, self)
+            elif ptype == 'bot_hard': # Nếu là bot khó
+                logging.info(f"Khởi tạo Bot Khó cho Người chơi {pid + 1}")
+                bots[pid] = HardBot(pid, self)
         return bots
 
     def is_bot_turn(self):

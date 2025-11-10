@@ -49,11 +49,13 @@ class BotSelectionView:
     def handle_events(self, event):
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == self.easy_bot_button:
-                self.bot_difficulty = 'easy'
+                self.bot_difficulty = 'bot_easy' # <- Gửi tín hiệu 'bot_easy'
                 self.is_running = False
                 self.next_screen = 'game'
             if event.ui_element == self.hard_bot_button:
-                print("Chức năng Bot Khó chưa được hỗ trợ.")
+                self.bot_difficulty = 'bot_hard' # <- Gửi tín hiệu 'bot_hard'
+                self.is_running = False
+                self.next_screen = 'game'
             if event.ui_element == self.back_button:
                 self.is_running = False
                 self.next_screen = 'mode_select'

@@ -10,7 +10,7 @@ from core.piece import Piece
 from core.board import Board
 
 # --- Cấu hình Client ---
-SERVER_IP = '192.168.1.10' # Sẽ được cập nhật từ OnlineLobbyView
+SERVER_IP = '192.168.1.4' # Sẽ được cập nhật từ OnlineLobbyView
 SERVER_PORT = 65432
 ENCODING = 'utf-8'
 
