@@ -21,6 +21,7 @@ is_connected = False
 running = False # Chỉ trạng thái của luồng nhận
 my_player_id = -1
 game_state = {} # Lưu trạng thái game nhận từ server
+sound_to_play_queue = [] # Hàng đợi âm thanh
 last_message = "Chưa kết nối"
 
 # Khóa để bảo vệ truy cập game_state từ nhiều luồng (nếu cần)
@@ -186,6 +187,12 @@ def receive_updates(sock):
 
                         # --- Process other messages ---
                         elif msg_type == MSG_TYPE_GAME_STATE:
+                            # --- TÁCH ÂM THANH RA TRƯỚC ---
+                            sound = payload.pop("last_action_sound", None)
+                            if sound:
+                                with state_lock:
+                                    sound_to_play_queue.append(sound)
+                                    logging.debug("Đã thêm âm thanh '%s' vào hàng đợi", sound)
                             game_state.update(payload)
                             current_turn = game_state.get('turn', -1)
                             dice_val = game_state.get('dice_value')
@@ -235,6 +242,15 @@ def receive_updates(sock):
 
     logging.info("Luồng nhận dữ liệu đã dừng.")
     is_connected = False
+
+
+def get_sound_to_play():
+    """Lấy và xóa một âm thanh từ hàng đợi."""
+    global sound_to_play_queue
+    with state_lock:
+        if sound_to_play_queue:
+            return sound_to_play_queue.pop(0) # Lấy phần tử đầu tiên
+    return None
 
     
 def send_action(action_data):
