@@ -16,7 +16,8 @@ class SoundManager:
                 'dice': True,
                 'move': True,
                 'kick': True,
-                'win': True
+                'win': True,
+                'done': True
                 # Thêm các loại khác nếu cần
             }
             # ----------------------------------------
@@ -42,7 +43,7 @@ class SoundManager:
                 logging.warning("Music file not found at %s", music_path)
 
             sfx_files = { 'dice': 'dice_roll.mp3', 'move': 'piece_move.mp3',
-                          'kick': 'kick.mp3', 'win': 'win.mp3' }
+                          'kick': 'kick.mp3', 'win': 'win.mp3', 'done':'done.mp3' }
             for name, filename in sfx_files.items():
                 path = os.path.join(sound_dir, filename)
                 if os.path.exists(path):

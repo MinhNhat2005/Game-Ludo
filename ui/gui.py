@@ -52,7 +52,7 @@ class LudoGUI:
         # --- LOGIC MỚI CHO GAME ONLINE ---
         elif screen_name == 'network_game':
             # NetworkGameUI sẽ tự lấy trạng thái từ client.py
-            self.active_view = NetworkGameUI(self.screen) 
+            self.active_view = NetworkGameUI(self.screen, self.sound_manager) 
         # ---------------------------
 
         elif screen_name == 'rules':

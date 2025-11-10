@@ -6,12 +6,14 @@ class Piece:
         self.path_index = -1  # -1 = còn trong chuồng
         self.finished = False # Trạng thái đã về đích hay chưa
 
-    def move(self, steps):
+    # Trong file: core/piece.py
+
+    def move(self, steps, path_len):
         """
         Di chuyển quân cờ và cập nhật trạng thái nếu về đích.
-        Sử dụng tổng số bước đi là 57.
+        - steps: số bước đi (giá trị xúc xắc).
+        - path_len: tổng độ dài đường đi (ví dụ: 57 ô).
         """
-        PATH_LENGTH = 57
         if self.finished:
             return
 
@@ -23,9 +25,10 @@ class Piece:
         # Di chuyển trên đường đi
         if self.path_index >= 0:
             new_index = self.path_index + steps
+            # GameManager đã kiểm tra nước đi này là hợp lệ
             self.path_index = new_index
 
-            # KIỂM TRA VỀ ĐÍCH: Nếu đến đúng ô cuối cùng (index = 56)
-            # thì đánh dấu là đã hoàn thành.
-            if self.path_index == PATH_LENGTH - 1:
+            # KIỂM TRA VỀ ĐÍCH: Nếu đến đúng ô cuối cùng
+            # (ví dụ: index 56 nếu đường đi dài 57 ô)
+            if self.path_index == path_len - 1:
                 self.finished = True
