@@ -224,7 +224,7 @@ class BoardView:
                         elif just_finished:
                              self.msg = base_msg + " (Đã về 1 quân!)"
                              if self.sound_manager: self.sound_manager.play_sfx('done') 
-                        else: # Di chuyển bình thường (bao gồm cả ra quân)
+                        else:
                             self.msg = base_msg
                             if self.sound_manager: self.sound_manager.play_sfx('move')
                         # -------------------------

@@ -131,30 +131,33 @@ class NetworkGameUI:
 
     def update(self, time_delta):
         if not client.is_client_connected() and self.is_running:
-            logging.info("NetworkGameUI: Mất kết nối, quay về sảnh chờ...")
-            self.is_running = False
-            self.next_screen = 'online_lobby'
-            return
-
-        # --- PHÁT ÂM THANH TỪ HÀNG ĐỢI ---
-        if self.sound_manager:
-            sound = client.get_sound_to_play() # Lấy âm thanh từ hàng đợi
-            if sound:
-                logging.info("NetworkGameUI: Đang phát âm thanh: %s", sound)
-                self.sound_manager.play_sfx(sound)
-        # -----------------------------------
+             logging.info("NetworkGameUI: Mất kết nối, quay về sảnh chờ...")
+             self.is_running = False
+             self.next_screen = 'online_lobby'
+             return
 
         game_state = client.get_current_game_state()
         my_player_id = client.get_my_player_id()
         is_my_turn = game_state.get('turn') == my_player_id
         dice_value = game_state.get('dice_value')
 
-        # Cập nhật highlight
         highlight_list = []
         if is_my_turn and dice_value is not None:
-            valid_dest_tuples = [tuple(cell) for cell in game_state.get('valid_destinations', [])]
-            highlight_list = valid_dest_tuples
+             valid_dest_tuples = [tuple(cell) for cell in game_state.get('valid_destinations', [])]
+             highlight_list = valid_dest_tuples
         self.board_view.highlight_cells = highlight_list
+
+        # --- XỬ LÝ ÂM THANH KHI NHẬN STATE ---
+        # (Logic này cần được tinh chỉnh - làm sao biết nước đi vừa xảy ra?)
+        # Có thể dựa vào `last_message`
+        last_msg = client.get_last_message()
+        if "đá" in last_msg and "đã di chuyển" in last_msg:
+             # Ưu tiên âm thanh đá
+             pass # Logic này khó chính xác, nên để server gửi tín hiệu âm thanh
+        elif "đã di chuyển" in last_msg:
+             pass # Tạm thời phát move ở đây
+             # if self.sound_manager: self.sound_manager.play_sfx('move')
+        # ------------------------------------
 
     def draw(self):
         current_game_state = client.get_current_game_state()

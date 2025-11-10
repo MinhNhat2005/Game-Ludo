@@ -508,31 +508,35 @@ def handle_client_thread(conn, addr):
 
                                 # --- Xử lý Di Chuyển Quân ---
                                 elif action_type == MSG_TYPE_MOVE_PIECE:
-                                    logging.info("--> BẮT ĐẦU XỬ LÝ MOVE_PIECE")
+                                    logging.info("--> BẮT ĐẦU XỬ LÝ MOVE_PIECE") # Log mới
+                                    # Kiểm tra đã gieo chưa (an toàn ngoài lock)
                                     current_dice_value_move = gm_instance.dice_value 
                                     if current_dice_value_move is None:
-                                        logging.warning("   Từ chối move: Cần gieo trước.")
+                                        logging.warning("   Từ chối move: Cần gieo trước.") # Log mới
                                         send_to_client(conn, {"type": MSG_TYPE_MOVE_INVALID, "payload": {"reason": "Cần gieo trước."}}); continue
                                     
                                     piece_id = payload.get("piece_id");
                                     if piece_id is None: logging.warning("   Từ chối move: Thiếu piece_id."); continue
                                     
+                                    logging.info("   Tìm kiếm quân cờ P%d ID %d...", my_player_id+1, piece_id) # Log mới
+                                    # find_piece_by_id chỉ đọc, an toàn ngoài lock
                                     piece_to_move = gm_instance.find_piece_by_id(my_player_id, piece_id) 
                                     if not piece_to_move: logging.warning("   Không tìm thấy quân cờ."); continue
+                                    logging.info("   Tìm thấy quân cờ.") # Log mới
 
+                                    logging.info("   Kiểm tra nước đi hợp lệ...") # Log mới
+                                    # get_movable_pieces chỉ đọc, an toàn ngoài lock
                                     movable_pieces = gm_instance.get_movable_pieces(my_player_id, current_dice_value_move) 
                                     if piece_to_move not in movable_pieces:
-                                        logging.warning("   Quân cờ không hợp lệ để di chuyển.")
+                                        logging.warning("   Quân cờ không hợp lệ để di chuyển.") # Log mới
                                         send_to_client(conn, {"type": MSG_TYPE_MOVE_INVALID, "payload": {"reason": f"Không thể di chuyển quân {piece_id+1}."}}); continue
-                                    logging.info("   Nước đi hợp lệ.")
+                                    logging.info("   Nước đi hợp lệ.") # Log mới
 
                                     kick_message = None
                                     next_turn_after_move = -1
                                     dice_reset_after_move = False
-                                    game_has_winner = False
-                                    just_finished_this_move = False # Biến mới
-                                    sound_to_play = "move" # Mặc định là 'move'
-                                    
+                                    game_has_winner = False # Biến mới
+                                    winner_id = -1 # Biến mới
                                     # --- Thực hiện di chuyển và kiểm tra thắng (cần lock) ---
                                     with server_lock:
                                          room_check = rooms.get(current_room_id)
@@ -540,24 +544,20 @@ def handle_client_thread(conn, addr):
                                               gm_now = room_check["game_manager"]
                                               if gm_now.turn == my_player_id and gm_now.dice_value == current_dice_value_move:
                                                    logging.info("   Thực hiện move_piece...")
-                                                   # Lấy cả 3 kết quả trả về
-                                                   (kick_message, just_finished_this_move, game_has_winner) = gm_now.move_piece(piece_to_move) 
-                                                   
+                                                   kick_message = gm_now.move_piece(piece_to_move) # move_piece tự xử lý lượt / reset dice
                                                    next_turn_after_move = gm_now.turn
                                                    dice_reset_after_move = (gm_now.dice_value is None)
                                                    
-                                                   # --- XÁC ĐỊNH ÂM THANH CẦN PHÁT ---
-                                                   if game_has_winner:
-                                                        sound_to_play = 'win'
+                                                   # --- KIỂM TRA THẮNG NGAY SAU KHI ĐI ---
+                                                   # (Hàm move_piece đã tự gọi _check_for_winner và cập nhật gm_now.winner)
+                                                   if gm_now.winner is not None:
+                                                        game_has_winner = True
+                                                        winner_id = gm_now.winner
                                                         room_check["game_started"] = False # Đánh dấu game kết thúc
-                                                   elif kick_message:
-                                                        sound_to_play = 'kick'
-                                                   elif just_finished_this_move:
-                                                        sound_to_play = 'done'
-                                                   # ---------------------------------
-
-                                                   logging.info("   move_piece xong. Kick: %s, NextTurn: %d, DiceReset: %s, Winner: %s, Sound: %s", 
-                                                                bool(kick_message), next_turn_after_move+1, dice_reset_after_move, game_has_winner, sound_to_play)
+                                                   # -----------------------------------
+                                                   
+                                                   logging.info("   move_piece xong. Kick: %s, NextTurn: %d, DiceReset: %s, Winner: %s", 
+                                                                bool(kick_message), next_turn_after_move+1, dice_reset_after_move, game_has_winner)
                                               else:
                                                    logging.warning("   Trạng thái game thay đổi trước khi kịp move!"); send_to_client(conn, {"type": MSG_TYPE_MOVE_INVALID, "payload": {"reason": "Trạng thái game đã thay đổi."}}); continue
                                          else: raise ValueError("Phòng/GM mất khi chuẩn bị thực hiện move")
@@ -566,18 +566,17 @@ def handle_client_thread(conn, addr):
                                     logging.info("   Chuẩn bị gửi GAME_STATE (sau move)...")
                                     state_after_move = serialize_game_state_for_room(current_room_id)
                                     if not state_after_move: raise ValueError("Serialize sau move trả về state rỗng!")
-                                    
-                                    # --- GẮN GHI CHÚ ÂM THANH VÀO STATE ---
-                                    state_after_move["last_action_sound"] = sound_to_play
-                                    # -------------------------------------
-                                    
                                     broadcast_to_room(current_room_id, {"type": MSG_TYPE_GAME_STATE, "payload": state_after_move})
                                     logging.info("   Gửi GAME_STATE (sau move) xong.")
 
+                                    # --- XỬ LÝ KẾT THÚC GAME HOẶC CHUYỂN LƯỢT ---
                                     if game_has_winner:
-                                         logging.info("   GAME OVER! Người chiến thắng là P%d.", gm_instance.winner + 1)
-                                         broadcast_to_room(current_room_id, {"type": MSG_TYPE_GAME_OVER, "payload": {"winner_id": gm_instance.winner}})
+                                         # Gửi thông báo GAME_OVER
+                                         logging.info("   GAME OVER! Người chiến thắng là P%d.", winner_id + 1)
+                                         broadcast_to_room(current_room_id, {"type": MSG_TYPE_GAME_OVER, "payload": {"winner_id": winner_id}})
+                                         # (Không cần gửi YOUR_TURN nữa)
                                     elif next_turn_after_move != current_turn or dice_reset_after_move:
+                                        # Gửi thông báo lượt tiếp theo
                                         time.sleep(0.1)
                                         logging.info("   Chuẩn bị gửi YOUR_TURN (Lượt P%d)...", next_turn_after_move + 1)
                                         broadcast_to_room(current_room_id, {"type": MSG_TYPE_YOUR_TURN, "payload": {"player_id": next_turn_after_move}})
