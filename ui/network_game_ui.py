@@ -1,13 +1,10 @@
 # ui/network_game_ui.py
 import pygame
 import sys
-import logging # Thêm logging
-# Import client để gửi hành động và lấy trạng thái
+import logging 
 from network import client 
-# Import BoardView để vẽ bàn cờ
 from ui.components.board_view import BoardView
 # Import các hằng số cần thiết
-# Đảm bảo MAX_PLAYERS được import TỪ ĐÂY
 from utils.constants import (
     WIDTH, HEIGHT, CELL, PLAYER_COLORS, BLACK, WHITE, MAX_PLAYERS 
 )
@@ -22,6 +19,7 @@ class NetworkGameUI:
         self.sound_manager = sound_manager # Lưu sound_manager
         self.is_running = True
         self.clock = pygame.time.Clock()
+        self.next_screen = None # Thêm thuộc tính này
         
         # --- SỬA LỖI Ở ĐÂY ---
         # 1. Sử dụng MAX_PLAYERS đã import
@@ -37,9 +35,7 @@ class NetworkGameUI:
         except:
             self.status_font = pygame.font.SysFont("Arial", 24)
             
-        # --- ĐÃ XÓA CÁC DÒNG BỊ LẶP ---
-
-        # Thêm thuộc tính cho nút quay lại
+        # Thêm thuộc tính cho nút quay lại (lấy từ board_view)
         self.back_button_rect = self.board_view.back_button_rect
         logging.info("NetworkGameUI initialized.") # Dùng logging
 
@@ -82,7 +78,6 @@ class NetworkGameUI:
                     
                     if my_dice_view and my_dice_view.clicked(mouse_pos):
                         logging.info("Client: Gửi yêu cầu gieo xúc xắc...")
-                        # Tự phát âm thanh ngay khi gửi
                         if self.sound_manager: self.sound_manager.play_sfx('dice')
                         client.send_action({"type": client.MSG_TYPE_ROLL_DICE})
                         
@@ -93,7 +88,7 @@ class NetworkGameUI:
                     clicked_cell = (gx, gy)
                     piece_id_to_move = None
                     
-                    temp_board_logic = Board() # Board tạm để tính
+                    temp_board_logic = Board()
                     my_pieces_data = []
                     players_pieces = game_state.get('players_pieces', [])
                     if my_player_id < len(players_pieces):
@@ -121,7 +116,6 @@ class NetworkGameUI:
 
                     if piece_id_to_move is not None:
                         logging.info(f"Client: Gửi yêu cầu di chuyển quân {piece_id_to_move + 1}...")
-                        # Âm thanh sẽ được phát khi nhận lại GAME_STATE
                         client.send_action({"type": client.MSG_TYPE_MOVE_PIECE, "payload": {"piece_id": piece_id_to_move}})
                     else:
                          logging.warning(f"Client: Click vào ô {clicked_cell} không phải nước đi hợp lệ.")
@@ -136,6 +130,14 @@ class NetworkGameUI:
              self.next_screen = 'online_lobby'
              return
 
+        # --- PHÁT ÂM THANH TỪ HÀNG ĐỢI ---
+        if self.sound_manager:
+            sound = client.get_sound_to_play() # Lấy âm thanh từ hàng đợi
+            if sound:
+                logging.info("NetworkGameUI: Đang phát âm thanh: %s", sound)
+                self.sound_manager.play_sfx(sound)
+        # -----------------------------------
+
         game_state = client.get_current_game_state()
         my_player_id = client.get_my_player_id()
         is_my_turn = game_state.get('turn') == my_player_id
@@ -147,22 +149,12 @@ class NetworkGameUI:
              highlight_list = valid_dest_tuples
         self.board_view.highlight_cells = highlight_list
 
-        # --- XỬ LÝ ÂM THANH KHI NHẬN STATE ---
-        # (Logic này cần được tinh chỉnh - làm sao biết nước đi vừa xảy ra?)
-        # Có thể dựa vào `last_message`
-        last_msg = client.get_last_message()
-        if "đá" in last_msg and "đã di chuyển" in last_msg:
-             # Ưu tiên âm thanh đá
-             pass # Logic này khó chính xác, nên để server gửi tín hiệu âm thanh
-        elif "đã di chuyển" in last_msg:
-             pass # Tạm thời phát move ở đây
-             # if self.sound_manager: self.sound_manager.play_sfx('move')
-        # ------------------------------------
-
     def draw(self):
         current_game_state = client.get_current_game_state()
         last_msg = client.get_last_message()
+        
         self.board_view.draw_from_state(current_game_state)
+        
         status_text = self.status_font.render(last_msg, True, (255, 255, 255))
         text_rect = status_text.get_rect(center=(WIDTH // 2, HEIGHT - 30))
         self.screen.blit(status_text, text_rect)

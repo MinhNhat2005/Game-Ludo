@@ -11,58 +11,83 @@ class MenuView:
         self.next_screen = None
 
         # --- TẢI HÌNH NỀN VÀ FONT CHỮ ---
-        self.background = pygame.transform.scale(pygame.image.load('assets/images/background.png').convert(), (WIDTH, HEIGHT))
-        self.title_font = pygame.font.Font('assets/fonts/title_font.ttf', 80)
-        #self.title_font = pygame.font.SysFont('Arial', 80, bold=True)
+        try:
+            self.background = pygame.transform.scale(
+                pygame.image.load('assets/images/background.png').convert(),
+                (WIDTH, HEIGHT)
+            )
+        except pygame.error: # Xử lý nếu không tìm thấy file
+            self.background = pygame.Surface((WIDTH, HEIGHT))
+            self.background.fill(pygame.Color('#1a1a1a'))
+
+        try:
+            # Dùng font tùy chỉnh
+            self.title_font = pygame.font.Font('assets/fonts/title_font.ttf', 80)
+        except pygame.error: # Dùng font hệ thống nếu lỗi
+            self.title_font = pygame.font.SysFont('Arial', 80, bold=True)
 
         # --- VẼ TIÊU ĐỀ LÊN BACKGROUND ---
         title_text = self.title_font.render('Cờ Cá Ngựa', True, pygame.Color('white'))
-        title_rect = title_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 150))
-        # Thêm hiệu ứng đổ bóng cho chữ
+        title_rect = title_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 200)) # Đẩy tiêu đề lên cao
         shadow_text = self.title_font.render('Cờ Cá Ngựa', True, pygame.Color('black'))
-        shadow_rect = shadow_text.get_rect(center=(WIDTH // 2 + 3, HEIGHT // 2 - 147))
+        shadow_rect = shadow_text.get_rect(center=(WIDTH // 2 + 3, HEIGHT // 2 - 197))
         self.background.blit(shadow_text, shadow_rect)
         self.background.blit(title_text, title_rect)
 
 
-        # --- Sắp xếp lại vị trí cho 4 nút ---
+        # --- SẮP XẾP LẠI VỊ TRÍ CHO 5 NÚT ---
         button_height = 50
         button_width = 220
-        button_y_start = HEIGHT // 2 - (button_height * 2) // 2 + 50 # Căn giữa khối nút
+        # 1. ĐỊNH NGHĨA KHOẢNG CÁCH TRƯỚC
+        button_spacing = 70 # Khoảng cách giữa các nút
+        
+        # 2. Tính toán vị trí bắt đầu
+        total_block_height = (button_height * 5) + (button_spacing - button_height) * 4
+        button_y_start = HEIGHT // 2 - total_block_height // 2 + 50 
 
+        # 3. Sắp xếp lại các nút thẳng hàng, căn giữa
         self.play_button = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((WIDTH // 2 - button_width - 10, button_y_start), (button_width, button_height)),
+            relative_rect=pygame.Rect((WIDTH // 2 - button_width // 2, button_y_start), (button_width, button_height)),
             text='CHƠI NGAY',
             manager=self.manager
         )
+        self.history_button = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((WIDTH // 2 - button_width // 2, button_y_start + button_spacing), (button_width, button_height)),
+            text='LỊCH SỬ',
+            manager=self.manager
+        )
         self.rules_button = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((WIDTH // 2 + 10, button_y_start), (button_width, button_height)),
+            relative_rect=pygame.Rect((WIDTH // 2 - button_width // 2, button_y_start + button_spacing * 2), (button_width, button_height)),
             text='LUẬT CHƠI',
             manager=self.manager
         )
         self.settings_button = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((WIDTH // 2 - button_width - 10, button_y_start + 70), (button_width, button_height)),
+            relative_rect=pygame.Rect((WIDTH // 2 - button_width // 2, button_y_start + button_spacing * 3), (button_width, button_height)),
             text='CÀI ĐẶT',
             manager=self.manager
         )
         self.exit_button = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((WIDTH // 2 + 10, button_y_start + 70), (button_width, button_height)),
+            relative_rect=pygame.Rect((WIDTH // 2 - button_width // 2, button_y_start + button_spacing * 4), (button_width, button_height)),
             text='THOÁT GAME',
             manager=self.manager
         )
 
     def handle_events(self, event):
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            # 4. Sửa lại bằng 'elif' để code chạy đúng
             if event.ui_element == self.play_button:
                 self.is_running = False
                 self.next_screen = 'mode_select'
-            if event.ui_element == self.rules_button:
+            elif event.ui_element == self.history_button:
+                self.is_running = False
+                self.next_screen = 'history'
+            elif event.ui_element == self.rules_button:
                 self.is_running = False
                 self.next_screen = 'rules'
-            if event.ui_element == self.settings_button:
+            elif event.ui_element == self.settings_button:
                 self.is_running = False
                 self.next_screen = 'settings'
-            if event.ui_element == self.exit_button:
+            elif event.ui_element == self.exit_button:
                 self.is_running = False
                 self.next_screen = 'exit'
 
