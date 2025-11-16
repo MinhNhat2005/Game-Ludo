@@ -21,7 +21,8 @@ class DiceView:
         return self.value
 
     def set_value(self, num):
-        """Đặt giá trị cho xúc xắc (dùng cho bot)."""
+        """Đặt giá trị cho xúc xắc (dùng cho bot và network)."""
+        # Đảm bảo không có phép cộng/trừ nào ở đây
         if 1 <= num <= 6:
             self.value = num
 
@@ -31,19 +32,22 @@ class DiceView:
 
     def draw(self, screen):
         """Vẽ xúc xắc và các chấm."""
-        # Vẽ viền nếu là lượt của người chơi
+        
+        # 1. Vẽ viền nếu là lượt của người chơi
         if self.active:
+            # Viền ngoài to hơn
             pygame.draw.rect(screen, (255, 200, 0), self.rect.inflate(10, 10), 4, border_radius=5)
 
-        # Vẽ nền xúc xắc
+        # 2. Vẽ nền xúc xắc
         pygame.draw.rect(screen, self.color, self.rect, border_radius=5)
         
-        # Tọa độ các chấm trên mặt xúc xắc
+        # 3. Tính tọa độ các chấm
         center = self.size // 2
         quarter = self.size // 4
         three_quarter = self.size * 3 // 4
         
         dot_positions = []
+        # --- LOGIC ÁNH XẠ GIÁ TRỊ (VALUE) VÀO VỊ TRÍ (DOTS) ---
         if self.value == 1:
             dot_positions = [(center, center)]
         elif self.value == 2:
@@ -51,11 +55,19 @@ class DiceView:
         elif self.value == 3:
             dot_positions = [(quarter, quarter), (center, center), (three_quarter, three_quarter)]
         elif self.value == 4:
-            dot_positions = [(quarter, quarter), (three_quarter, quarter), (quarter, three_quarter), (three_quarter, three_quarter)]
+            dot_positions = [(quarter, quarter), (three_quarter, quarter), 
+                             (quarter, three_quarter), (three_quarter, three_quarter)]
         elif self.value == 5:
-            dot_positions = [(quarter, quarter), (three_quarter, quarter), (center, center), (quarter, three_quarter), (three_quarter, three_quarter)]
+            dot_positions = [(quarter, quarter), (three_quarter, quarter), 
+                             (center, center), 
+                             (quarter, three_quarter), (three_quarter, three_quarter)]
         elif self.value == 6:
-            dot_positions = [(quarter, quarter), (three_quarter, quarter), (quarter, center), (three_quarter, center), (quarter, three_quarter), (three_quarter, three_quarter)]
+            dot_positions = [(quarter, quarter), (three_quarter, quarter), 
+                             (quarter, center), (three_quarter, center), # Hàng giữa
+                             (quarter, three_quarter), (three_quarter, three_quarter)]
+        # -----------------------------------------------------
 
+        # 4. Vẽ các chấm
         for pos in dot_positions:
+            # Cộng tọa độ x, y gốc của xúc xắc
             pygame.draw.circle(screen, WHITE, (self.x + pos[0], self.y + pos[1]), self.dot_radius)

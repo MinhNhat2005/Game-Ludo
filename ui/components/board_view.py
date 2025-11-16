@@ -292,46 +292,46 @@ class BoardView:
     #  VẼ CHO CHẾ ĐỘ ONLINE
     # ==========================================================
     def draw_from_state(self, game_state):
-        """Vẽ cho chế độ ONLINE."""
+        """Vẽ cho chế độ ONLINE, bao gồm thanh thông báo."""
+        # 1️⃣ Vẽ bàn cờ
         self.draw_board_layout()
         self.draw_path()
         self.draw_highlight()
 
-        # --- Vẽ Quân Cờ dựa trên game_state ---
+        # 2️⃣ Vẽ quân cờ dựa trên game_state
         players_pieces_data = game_state.get('players_pieces', [])
-        
         for pid, pieces_data in enumerate(players_pieces_data):
-            if pid >= len(PLAYER_COLORS) or pid >= len(self.home_base_offsets): continue
+            if pid >= len(PLAYER_COLORS) or pid >= len(self.home_base_offsets): 
+                continue
             player_color = PLAYER_COLORS[pid]
-            ox, oy = self.home_base_offsets[pid] # Lấy offset gốc của chuồng
+            ox, oy = self.home_base_offsets[pid]
 
             for piece_data in pieces_data:
                 path_index = piece_data.get('path_index', -1)
                 is_finished = piece_data.get('finished', False)
                 piece_id = piece_data.get('id', -1)
-                if is_finished: continue
+                if is_finished: 
+                    continue
 
                 px, py = 0, 0
                 if path_index == -1:
-                    # --- LOGIC CĂN GIỮA MỚI (ĐÃ SỬA) ---
                     try:
                         rx, ry = self.circle_relative_pos[piece_id]
                         px = int(self.start_x + ox + rx)
                         py = int(self.start_y + oy + ry)
-                    except (IndexError, TypeError) as e:
-                        px = int(self.start_x + ox + 3*CELL); py = int(self.start_y + oy + 3*CELL)
-                        print(f"Lỗi: piece id không hợp lệ (state) (player {pid}, piece {piece_id}): {e}")
-                    # --- KẾT THÚC LOGIC MỚI ---
+                    except (IndexError, TypeError, AttributeError):
+                        px = int(self.start_x + ox + 3*CELL)
+                        py = int(self.start_y + oy + 3*CELL)
                 else:
-                    if self.gm and self.gm.board: # Dùng dummy board để lấy path
-                       path = self.gm.board.get_path_for_player(pid)
-                       if path_index < len(path):
-                           gx, gy = path[path_index]
-                           px = self.start_x + gx * CELL + CELL // 2
-                           py = self.start_y + gy * CELL + CELL // 2
-                       else: continue
-                    else: continue
-                
+                    if self.gm and self.gm.board:
+                        path = self.gm.board.get_path_for_player(pid)
+                        if path_index < len(path):
+                            gx, gy = path[path_index]
+                            px = self.start_x + gx * CELL + CELL // 2
+                            py = self.start_y + gy * CELL + CELL // 2
+                        else:
+                            continue
+
                 pygame.draw.circle(self.screen, player_color, (px, py), 18)
                 pygame.draw.circle(self.screen, BLACK, (px, py), 18, 2)
                 if piece_id != -1:
@@ -340,24 +340,42 @@ class BoardView:
                     text_rect = id_text.get_rect(center=(px, py))
                     self.screen.blit(id_text, text_rect)
 
-        # --- Vẽ Xúc Xắc từ state ---
-        dice_val = game_state.get('dice_value'); current_turn = game_state.get('turn', -1)
+        # 3️⃣ Vẽ xúc xắc từ state
+        dice_val = game_state.get('dice_value')
+        current_turn = game_state.get('turn', -1)
         num_players_in_state = game_state.get('num_players', 0)
-        
+
+        # Tạo dice nếu chưa đủ
         while len(self.dices) < num_players_in_state:
-             new_pid = len(self.dices)
-             if new_pid in DICE_POSITIONS and new_pid < len(PLAYER_COLORS):
-                 x, y = DICE_POSITIONS[new_pid]; color = PLAYER_COLORS[new_pid]
-                 self.dices.append(DiceView(x, y, color, new_pid))
-             else:
-                 break
-             
+            new_pid = len(self.dices)
+            if new_pid in DICE_POSITIONS and new_pid < len(PLAYER_COLORS):
+                x, y = DICE_POSITIONS[new_pid]
+                color = PLAYER_COLORS[new_pid]
+                self.dices.append(DiceView(x, y, color, new_pid))
+            else:
+                break
+
         for i, dice in enumerate(self.dices):
             if i < num_players_in_state:
                 dice.active = (i == current_turn)
-                if i == current_turn and dice_val is not None: dice.set_value(dice_val)
-                elif not dice.active: dice.set_value(1)
+                if i == current_turn and dice_val is not None: 
+                    dice.set_value(dice_val)
+                elif not dice.active: 
+                    dice.set_value(1)
                 dice.draw(self.screen)
+
+        # 4️⃣ Vẽ thanh thông báo phía dưới
+        if hasattr(self, 'msg') and self.msg:
+            msg_surface = FONT.render(self.msg, True, BLACK)
+            self.screen.blit(msg_surface, (20, HEIGHT - 40))
+
+        # 5️⃣ Vẽ nút quay lại
+        self._draw_back_button()
+
+        # 6️⃣ Cập nhật màn hình
+        pygame.display.flip()
+        self.clock.tick(60)
+
 
         # --- VẼ NÚT QUAY LẠI (CHO ONLINE) ---
         self._draw_back_button()

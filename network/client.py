@@ -11,7 +11,7 @@ from core.board import Board
 
 # --- Cấu hình Client ---
 SERVER_IP = '192.168.1.4' # Sẽ được cập nhật từ OnlineLobbyView
-SERVER_PORT = 65432
+SERVER_PORT = 65433
 ENCODING = 'utf-8'
 
 # --- Trạng thái Client (Toàn cục trong module này) ---

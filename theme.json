@@ -34,5 +34,27 @@
             "normal_border": "#00000000",
             "hovered_border": "#00000000"
         }
+    },
+
+    "#login_button": {
+        "colours": {
+            "normal_bg": "#3cb371",
+            "hovered_bg": "#2e8b57",
+            "normal_text": "#ffffff",
+            "hovered_text": "#ffffff",
+            "normal_border": "#00000000",
+            "hovered_border": "#00000000"
+        }
+    },
+
+    "#register_button": {
+        "colours": {
+            "normal_bg": "#1e90ff",
+            "hovered_bg": "#187bcd",
+            "normal_text": "#ffffff",
+            "hovered_text": "#ffffff",
+            "normal_border": "#00000000",
+            "hovered_border": "#00000000"
+        }
     }
 }
