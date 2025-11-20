@@ -32,3 +32,13 @@ class Piece:
             # (ví dụ: index 56 nếu đường đi dài 57 ô)
             if self.path_index == path_len - 1:
                 self.finished = True
+
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "player_id": self.player_id,
+            "position": self.position,
+            "state": self.state,
+            "path_index": self.path_index,
+        }

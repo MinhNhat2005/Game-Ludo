@@ -45,6 +45,12 @@ class MenuView:
             text='CÀI ĐẶT',
             manager=self.manager
         )
+        self.history_button = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((WIDTH // 2 + 10, button_y_start + 140), (button_width, button_height)),
+            text='LỊCH SỬ',
+            manager=self.manager
+        )
+
         self.exit_button = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((WIDTH // 2 + 10, button_y_start + 70), (button_width, button_height)),
             text='THOÁT GAME',
@@ -65,6 +71,11 @@ class MenuView:
             if event.ui_element == self.exit_button:
                 self.is_running = False
                 self.next_screen = 'exit'
+            if event.ui_element == self.history_button:
+                self.is_running = False
+                self.next_screen = 'history'  # đặt tên màn hình lịch sử
+
+
 
         self.manager.process_events(event)
 

@@ -219,8 +219,17 @@ class BoardView:
                             self.msg = f"Người {current+1} THẮNG CUỘC!"
                             if self.sound_manager: self.sound_manager.play_sfx('win')
                         elif kick_msg:
-                            self.msg = base_msg + kick_msg
-                            if self.sound_manager: self.sound_manager.play_sfx('kick')
+                            kicked_player = getattr(kick_msg, "owner", None)
+                            kicked_id = getattr(kick_msg, "id", None)
+
+                            if kicked_player is not None and kicked_id is not None:
+                                self.msg = f"{base_msg} → Đá quân của Người {kicked_player+1} (quân {kicked_id+1})"
+                            else:
+                                self.msg = f"{base_msg} → Đá 1 quân!"
+
+                            if self.sound_manager: 
+                                self.sound_manager.play_sfx('kick')
+
                         elif just_finished:
                              self.msg = base_msg + " (Đã về 1 quân!)"
                              if self.sound_manager: self.sound_manager.play_sfx('done') 

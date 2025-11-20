@@ -14,23 +14,29 @@ class NetworkGameUI:
         self.clock = pygame.time.Clock()
         self.next_screen = None
 
-        # Khởi tạo BoardView với GameManager dummy
-        dummy_gm = GameManager(num_players=MAX_PLAYERS)
-        self.board_view = BoardView(screen, dummy_gm, dummy_gm.players, self.sound_manager)
+        # GameManager thực sự của NetworkGameUI
+        self.gm = GameManager(num_players=MAX_PLAYERS)
+        self.gm.mode = "Online"
 
-        # Font hiển thị thông báo
+        # BoardView dùng chính self.gm
+        self.board_view = BoardView(
+            screen,
+            self.gm,
+            self.gm.players,
+            self.sound_manager
+        )
+
         try:
             self.status_font = pygame.font.Font('assets/fonts/title_font.ttf', 24)
         except:
             self.status_font = pygame.font.SysFont("Arial", 24)
 
-        # Lưu nút quay lại
         self.back_button_rect = self.board_view.back_button_rect
 
-        # Lưu trạng thái online để draw
         self.online_state = None
 
         logging.info("NetworkGameUI initialized.")
+
 
     def handle_events(self, event):
         if not client.is_client_connected():
@@ -50,16 +56,28 @@ class NetworkGameUI:
             mouse_pos = event.pos
 
             # Kiểm tra nút quay lại
+            # Kiểm tra nút quay lại
             if self.back_button_rect.collidepoint(mouse_pos):
-                logging.info("NetworkGameUI: Nút Quay Lại được nhấn!")
-                client.disconnect_from_server()
+                logging.info("Người chơi nhấn nút Quay lại, lưu game...")
+                
+                from utils import firebase_manager
+
+                # Xác định chế độ: Offline / Bot / Online
+                mode = getattr(self, 'gm', None) and self.gm.mode if hasattr(self, 'gm') else 'Online'
+
+                # Lưu game lên Firebase
+                # is_loadable = True chỉ khi Offline hoặc Bot
+                firebase_manager.save_game_state(
+                    self.gm,
+                    is_loadable=(mode in ['Offline', 'Bot'])
+                )
+                logging.info(f"Game đã được lưu. MatchID: {getattr(self.gm, 'match_id', 'unknown')}, Mode: {mode}")
+
+                # Quay về sảnh chờ
                 self.is_running = False
                 self.next_screen = 'online_lobby'
                 return
 
-            logging.debug(f"\n--- Mouse Click ---")
-            logging.debug(f"DEBUG: My ID: {my_player_id}, Current Turn: {game_state.get('turn')}, Is My Turn: {is_my_turn}")
-            logging.debug(f"DEBUG: Dice Value: {game_state.get('dice_value')}, Can Roll: {can_roll}")
 
             if is_my_turn:
                 # Click vào xúc xắc
@@ -81,7 +99,7 @@ class NetworkGameUI:
                     clicked_cell = (gx, gy)
                     piece_id_to_move = None
 
-                    temp_board_logic = self.board_view.board  # Sử dụng board có sẵn
+                    temp_board_logic = self.board_view.gm  # Lấy trực tiếp game_manager
                     my_pieces_data = game_state.get('players_pieces', [])[my_player_id] if my_player_id < len(game_state.get('players_pieces', [])) else []
                     current_dice_value = game_state.get('dice_value')
 
@@ -94,11 +112,12 @@ class NetworkGameUI:
                                 continue
 
                             dest = None
-                            full_path = temp_board_logic.get_path_for_player(my_player_id)
+                            full_path = self.board_view.gm.board.get_path_for_player(my_player_id)
+
                             last_idx = len(full_path) - 1
 
                             if path_idx == -1 and current_dice_value == 6:
-                                dest = temp_board_logic.get_spawn_cell(my_player_id)
+                                dest = self.board_view.gm.board.get_spawn_cell(my_player_id)
                             elif path_idx >= 0:
                                 next_index = path_idx + current_dice_value
                                 if next_index <= last_idx:

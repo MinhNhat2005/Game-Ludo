@@ -2,6 +2,9 @@
 import pygame
 import pygame_gui
 import logging
+from utils import firebase_manager
+firebase_manager.initialize_firebase()
+
 from utils.constants import WIDTH, HEIGHT
 from utils.sound_manager import SoundManager
 from core.auth_manager import AuthManager
@@ -16,7 +19,7 @@ from .create_room_view import CreateRoomView
 from .join_room_view import JoinRoomView
 from .rules_view import RulesView
 from .settings_view import SettingsView
-from .history_view import HistoryView
+from .HistoryUI import HistoryUI
 from .game_ui import GameUI
 from .network_game_ui import NetworkGameUI
 from .login_view import LoginView
@@ -72,23 +75,33 @@ class LudoGUI:
             self.active_view = PlayerSelectionView(self.screen, self.ui_manager)
         elif screen_name == 'bot_select':
             self.active_view = BotSelectionView(self.screen, self.ui_manager)
+        elif screen_name == 'history':
+            self.active_view = HistoryUI(self.screen, self.ui_manager)
+            # Không phát nhạc (hoặc tùy chỉnh nếu muốn)
+
 
         # --- Game Offline ---
         # --- Trong LudoGUI.change_screen() ---
         elif screen_name == 'game':
-            # Nếu đến từ BotSelectionView → chơi với bot
+            self.sound_manager.stop_music() 
+            
+            # Khối này chỉ chạy khi self.active_view là BotSelectionView
             if isinstance(self.active_view, BotSelectionView):
-                # Lấy độ khó bot từ view (giả sử có attribute `selected_bot_difficulty`)
-                bot_difficulty = getattr(self.active_view, 'selected_bot_difficulty', 'easy')
-                if bot_difficulty == 'easy':
-                    bot_type = 'bot_easy'
+                
+                # SỬA LỖI Ở ĐÂY: Đọc thuộc tính đã được BotSelectionView lưu
+                bot_difficulty = getattr(self.active_view, 'selected_bot_difficulty', 'easy') 
+                
+                logging.info(f"Đã chọn độ khó: {bot_difficulty}") # DÒNG LOG KIỂM TRA
+                
+                if bot_difficulty == 'hard':
+                    bot_type = 'bot_hard' # <--- CHÍNH XÁC
                 else:
-                    bot_type = 'bot_hard'
-
+                    bot_type = 'bot_easy'
+                
                 self.active_view = GameUI(
                     self.screen,
-                    num_players=2,                           # Chỉ 2 người
-                    player_types=['human', bot_type],        # Player 1 là bạn, Player 2 là bot
+                    num_players=2, 
+                    player_types=['human', bot_type],
                     sound_manager=self.sound_manager
                 )
             else:
@@ -117,11 +130,47 @@ class LudoGUI:
         elif screen_name == 'settings':
             self.active_view = SettingsView(self.screen, self.ui_manager, self.sound_manager)
         elif screen_name == 'history':
-            self.active_view = HistoryView(self.screen, self.ui_manager, self.sound_manager)
+            self.active_view = HistoryUI(self.screen, self.ui_manager, self.sound_manager)
 
         # --- Exit ---
         elif screen_name == 'exit':
             self.is_running = False
+
+        elif screen_name == 'resume_game':
+            # num_players và player_types lúc này dùng tạm để chứa match_id và final_state
+            match_id, final_state = num_players, player_types  
+            mode = final_state.get('mode', 'Offline')
+
+
+            # Xác định player_types cho Offline/Bot
+            if mode == 'Offline':
+                player_types_to_use = ['human'] * final_state['num_players']
+            elif mode == 'Bot':
+                player_types_to_use = ['human', 'bot_easy']  # hoặc lấy từ final_state nếu lưu đủ
+            else:
+                # Online không resume, chỉ chơi trực tiếp
+                player_types_to_use = ['human'] * final_state['num_players']
+
+            # Tạo GameManager từ state đã load
+            gm = GameUI(
+                self.screen,
+                num_players=final_state['num_players'],
+                player_types=player_types_to_use,
+                sound_manager=self.sound_manager
+            ).gm
+            gm.match_id = match_id
+            gm._apply_loaded_state(final_state)
+
+            # Tạo lại GameUI với GameManager đã load
+            self.active_view = GameUI(
+                self.screen,
+                num_players=final_state['num_players'],
+                player_types=player_types_to_use,
+                sound_manager=self.sound_manager,
+                gm=gm
+            )
+
+
         else:
             logging.warning(f"Màn hình '{screen_name}' chưa được định nghĩa!")
 
@@ -143,25 +192,27 @@ class LudoGUI:
                 # Nếu view báo dừng, chuyển màn hình mới
                 if hasattr(self.active_view, 'is_running') and not self.active_view.is_running:
                     next_screen = getattr(self.active_view, 'next_screen', None)
+
                     if next_screen:
-                        num_players = getattr(self.active_view, 'num_players', None)
-                        player_types = getattr(self.active_view, 'player_types', None)
+                        # Trường hợp resume game từ HistoryUI
+                        if isinstance(next_screen, tuple) and next_screen[0] == 'resume_game':
+                            match_id = next_screen[1]
+                            final_state = next_screen[2]
+                            self.change_screen('resume_game', num_players=match_id, player_types=final_state)
 
-                        # Xử lý login
-                        if isinstance(self.active_view, LoginView) and next_screen == 'menu':
-                            self.logged_in_user_id = getattr(self.active_view, 'user_id', None)
-                            logging.info(f"Người dùng ID {self.logged_in_user_id} đăng nhập thành công, chuyển Menu.")
-                            # Phát nhạc khi chuyển sang menu
-                            self.sound_manager.play_music()
-                        elif isinstance(self.active_view, RegisterView) and next_screen == 'login':
-                            logging.info("Đăng ký thành công, quay về màn hình đăng nhập.")
+                        else:
+                            num_players = getattr(self.active_view, 'num_players', None)
+                            player_types = getattr(self.active_view, 'player_types', None)
 
-                        self.change_screen(
-                            next_screen,
-                            num_players=num_players,
-                            player_types=player_types
-                        )
-                        continue
+                            # Xử lý login
+                            if isinstance(self.active_view, LoginView) and next_screen == 'menu':
+                                self.logged_in_user_id = getattr(self.active_view, 'user_id', None)
+                                logging.info(f"Người dùng ID {self.logged_in_user_id} đăng nhập thành công, chuyển Menu.")
+                                self.sound_manager.play_music()
+                            elif isinstance(self.active_view, RegisterView) and next_screen == 'login':
+                                logging.info("Đăng ký thành công, quay về màn hình đăng nhập.")
+
+                            self.change_screen(next_screen, num_players=num_players, player_types=player_types)
 
             # --- Draw active view ---
             if self.active_view:
@@ -177,3 +228,4 @@ class LudoGUI:
             self.active_view.game_manager.logger.close()
 
         pygame.quit()
+

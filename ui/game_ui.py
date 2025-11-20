@@ -1,5 +1,6 @@
 import pygame
 import random
+import logging
 from core.game_manager import GameManager
 from ui.components.board_view import BoardView
 from network.client import get_current_game_state
@@ -11,7 +12,7 @@ class GameUI:
         self.is_running = True
         self.next_screen = None
         self.online_state = None  # lưu trạng thái online từ server
-        self.game_manager = GameManager(num_players=num_players, player_types=player_types)
+        self.game_manager = GameManager(num_players=num_players, player_types=player_types, is_online=False)
         self.board_view = BoardView(screen, self.game_manager, self.game_manager.players, self.sound_manager)
 
         self.bot_turn_timer = 0
@@ -19,11 +20,34 @@ class GameUI:
 
     # --- Xử lý sự kiện ---
     def handle_events(self, event):
+        # Xử lý nút Quay Lại
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_pos = event.pos
+            if self.board_view.back_button_rect.collidepoint(mouse_pos):
+                logging.info("Người chơi nhấn nút Quay Lại, lưu game...")
+                from utils import firebase_manager
+
+                # Lưu trạng thái game lên Firebase
+                # is_loadable = True chỉ khi chế độ Offline hoặc Bot
+                mode = 'Offline' if not self.game_manager.is_online else 'Online'
+                firebase_manager.save_game_state(
+                    self.game_manager,
+                    is_loadable=(mode in ['Offline', 'Bot'])
+                )
+                logging.info(f"Game đã được lưu. MatchID: {self.game_manager.match_id}, Mode: {mode}")
+
+                # Quay về màn hình trước (ví dụ menu hoặc mode_select)
+                self.is_running = False
+                self.next_screen = 'mode_select'
+                return
+
+        # Xử lý các sự kiện bình thường (offline/online)
         if not self.game_manager.is_bot_turn():
             result = self.board_view.handle_events(event)
             if result == 'back':
                 self.is_running = False
                 self.next_screen = 'mode_select'
+
 
     # --- Cập nhật mỗi frame ---
     def update(self, time_delta):
@@ -77,20 +101,31 @@ class GameUI:
 
     # --- Cập nhật trạng thái game từ server ---
     def update_game_state(self, state):
+        """Cập nhật trạng thái game online từ server vào game_manager và board_view."""
         self.online_state = state  # Lưu state ngay
-        current_turn = state.get('current_turn', self.game_manager.turn)
+
+        # --- Cập nhật lượt và giá trị xúc xắc ---
+        current_turn = state.get('current_turn', self.gm.turn)
         dice_value = state.get('dice_value', None)
+        self.gm.turn = current_turn
+        self.gm.dice_value = dice_value
 
-        self.game_manager.turn = current_turn
-        self.game_manager.dice_value = dice_value
-        self.game_manager.players = state.get('players', self.game_manager.players)
+        # --- Cập nhật trạng thái quân cờ từng người ---
+        server_players = state.get('players', None)
+        if server_players:
+            # Giả sử self.gm.players là list[list[Piece]]
+            for i, player_pieces_state in enumerate(server_players):
+                for j, piece_state in enumerate(player_pieces_state):
+                    piece = self.gm.players[i][j]
+                    piece.path_index = piece_state.get('path_index', piece.path_index)
+                    piece.finished = piece_state.get('finished', piece.finished)
 
-        # Cập nhật dice
+        # --- Cập nhật hiển thị xúc xắc ---
         if dice_value is not None:
-            self.board_view.update_dice_display(current_turn, dice_value)
+            if hasattr(self.board_view, 'update_dice_display'):
+                self.board_view.update_dice_display(current_turn, dice_value)
 
-        # Chuyển message từ server sang board_view.msg
-        # Ưu tiên LAST_MOVE_INFO > last_message > fallback
+        # --- Cập nhật message hiển thị trên board ---
         server_msg = state.get('last_move_info') or state.get('last_message')
         if server_msg:
             self.board_view.msg = server_msg
