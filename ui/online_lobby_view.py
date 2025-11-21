@@ -16,18 +16,19 @@ class OnlineLobbyView:
             (WIDTH, HEIGHT)
         )
         
-        try:
-            #self.title_font = pygame.font.SysFont('Arial', 60, bold=True)
-            self.title_font = pygame.font.Font('assets/fonts/title_font.ttf', 60)
-        except pygame.error:
-            self.title_font = pygame.font.Font(None, 60) 
+        # Luôn load từ file, không dùng SysFont
+        self.title_font = pygame.font.Font('assets/fonts/Sans_Flex.ttf', 60)
 
         title_text = self.title_font.render('CHƠI ONLINE', True, pygame.Color('white'))
-        title_rect = title_text.get_rect(center=(WIDTH // 2, 150))
+        title_rect = title_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 150))
+
+        # Hiệu ứng đổ bóng
         shadow_text = self.title_font.render('CHƠI ONLINE', True, pygame.Color('black'))
-        shadow_rect = shadow_text.get_rect(center=(WIDTH // 2 + 3, 153))
+        shadow_rect = shadow_text.get_rect(center=(WIDTH // 2 + 3, HEIGHT // 2 - 147))
+
         self.background.blit(shadow_text, shadow_rect)
         self.background.blit(title_text, title_rect)
+
 
         # --- Các nút lựa chọn ---
         button_width = 300

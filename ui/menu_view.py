@@ -11,25 +11,27 @@ class MenuView:
         self.next_screen = None
 
         # --- TẢI HÌNH NỀN VÀ FONT CHỮ ---
-        self.background = pygame.transform.scale(pygame.image.load('assets/images/background.png').convert(), (WIDTH, HEIGHT))
-        self.title_font = pygame.font.Font('assets/fonts/title_font.ttf', 80)
-        #self.title_font = pygame.font.SysFont('Arial', 80, bold=True)
+        self.background = pygame.transform.scale(
+            pygame.image.load('assets/images/background.png').convert(), 
+            (WIDTH, HEIGHT)
+        )
+        self.title_font = pygame.font.Font('assets/fonts/Sans_Flex.ttf', 80)
 
         # --- VẼ TIÊU ĐỀ LÊN BACKGROUND ---
         title_text = self.title_font.render('Cờ Cá Ngựa', True, pygame.Color('white'))
         title_rect = title_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 150))
-        # Thêm hiệu ứng đổ bóng cho chữ
         shadow_text = self.title_font.render('Cờ Cá Ngựa', True, pygame.Color('black'))
         shadow_rect = shadow_text.get_rect(center=(WIDTH // 2 + 3, HEIGHT // 2 - 147))
         self.background.blit(shadow_text, shadow_rect)
         self.background.blit(title_text, title_rect)
 
-
-        # --- Sắp xếp lại vị trí cho 4 nút ---
-        button_height = 50
+        # --- KÍCH THƯỚC VÀ VỊ TRÍ NÚT ---
         button_width = 220
-        button_y_start = HEIGHT // 2 - (button_height * 2) // 2 + 50 # Căn giữa khối nút
+        button_height = 50
+        spacing_y = 70
+        button_y_start = HEIGHT // 2 - (spacing_y * 2) // 2 + 50
 
+        # Hàng trên
         self.play_button = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((WIDTH // 2 - button_width - 10, button_y_start), (button_width, button_height)),
             text='CHƠI NGAY',
@@ -40,21 +42,25 @@ class MenuView:
             text='LUẬT CHƠI',
             manager=self.manager
         )
+
+        # Hàng giữa
         self.settings_button = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((WIDTH // 2 - button_width - 10, button_y_start + 70), (button_width, button_height)),
+            relative_rect=pygame.Rect((WIDTH // 2 - button_width - 10, button_y_start + spacing_y), (button_width, button_height)),
             text='CÀI ĐẶT',
             manager=self.manager
         )
         self.history_button = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((WIDTH // 2 + 10, button_y_start + 140), (button_width, button_height)),
+            relative_rect=pygame.Rect((WIDTH // 2 + 10, button_y_start + spacing_y), (button_width, button_height)),
             text='LỊCH SỬ',
             manager=self.manager
         )
 
+        # Hàng dưới (THOÁT GAME nằm giữa, màu đỏ)
         self.exit_button = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((WIDTH // 2 + 10, button_y_start + 70), (button_width, button_height)),
+            relative_rect=pygame.Rect((WIDTH // 2 - button_width // 2, button_y_start + spacing_y * 2), (button_width, button_height)),
             text='THOÁT GAME',
-            manager=self.manager
+            manager=self.manager,
+            object_id="#exit_button"
         )
 
     def handle_events(self, event):
@@ -62,20 +68,18 @@ class MenuView:
             if event.ui_element == self.play_button:
                 self.is_running = False
                 self.next_screen = 'mode_select'
-            if event.ui_element == self.rules_button:
+            elif event.ui_element == self.rules_button:
                 self.is_running = False
                 self.next_screen = 'rules'
-            if event.ui_element == self.settings_button:
+            elif event.ui_element == self.settings_button:
                 self.is_running = False
                 self.next_screen = 'settings'
-            if event.ui_element == self.exit_button:
+            elif event.ui_element == self.history_button:
+                self.is_running = False
+                self.next_screen = 'history'
+            elif event.ui_element == self.exit_button:
                 self.is_running = False
                 self.next_screen = 'exit'
-            if event.ui_element == self.history_button:
-                self.is_running = False
-                self.next_screen = 'history'  # đặt tên màn hình lịch sử
-
-
 
         self.manager.process_events(event)
 

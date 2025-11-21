@@ -47,7 +47,7 @@ class LudoGUI:
 
         self.active_view = None
         # Bắt đầu với màn hình login, KHÔNG phát nhạc
-        self.change_screen('login')
+        self.change_screen('menu')
 
     def change_screen(self, screen_name, num_players=None, player_types=None, user_uid=None):
         """Chuyển màn hình GUI, với phát nhạc đúng màn hình"""

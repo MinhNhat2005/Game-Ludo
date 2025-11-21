@@ -14,7 +14,7 @@ class PlayerSelectionView:
         self.background = pygame.Surface((WIDTH, HEIGHT))
         self.background.fill(pygame.Color('#1a1a1a'))
         
-        title_font = pygame.font.Font(None, 60)
+        title_font = pygame.font.Font('assets/fonts/Sans_Flex.ttf', 80)
         title_text = title_font.render('CHỌN SỐ NGƯỜI CHƠI', True, pygame.Color('white'))
         title_rect = title_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 150))
         self.background.blit(title_text, title_rect)

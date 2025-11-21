@@ -1,1 +1,20 @@
+# Force JSON, CSS, UI config files to use LF
 *.json text eol=lf
+*.css text eol=lf
+*.ui text eol=lf
+
+# Python files always use LF
+*.py text eol=lf
+
+# Windows batch scripts keep CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Fonts, images, binaries — do not touch
+*.ttf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.mp3 binary
+*.wav binary
+*.ogg binary

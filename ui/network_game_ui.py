@@ -27,7 +27,7 @@ class NetworkGameUI:
         )
 
         try:
-            self.status_font = pygame.font.Font('assets/fonts/title_font.ttf', 24)
+            self.status_font = pygame.font.Font('assets/fonts/Sans_Flex.ttf', 24)
         except:
             self.status_font = pygame.font.SysFont("Arial", 24)
 

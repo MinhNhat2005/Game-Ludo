@@ -23,7 +23,7 @@ class RulesView:
         # --- Tiêu đề màn hình ---
         try:
             #self.title_font = pygame.font.SysFont('Arial', 60, bold=True)
-            self.title_font = pygame.font.Font('assets/fonts/title_font.ttf', 60)
+            self.title_font = pygame.font.Font('assets/fonts/Sans_Flex.ttf', 80)
         except pygame.error:
             self.title_font = pygame.font.Font(None, 60) # Font dự phòng
 

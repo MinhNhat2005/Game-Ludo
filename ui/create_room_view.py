@@ -27,8 +27,8 @@ class CreateRoomView:
         
         )
         try:
-            self.title_font = pygame.font.Font('assets/fonts/title_font.ttf', 80)
-        except pygame.error: self.title_font = pygame.font.Font(None, 50)
+            self.title_font = pygame.font.Font('assets/fonts/Sans_Flex.ttf', 80)
+        except pygame.error: self.title_font = pygame.font.Font('assets/fonts/Sans_Flex.ttf', 50)
         title_text = self.title_font.render('TẠO PHÒNG MỚI', True, pygame.Color('white'))
         title_rect = title_text.get_rect(center=(WIDTH // 2, 100))
         self.background.blit(title_text, title_rect)
@@ -40,11 +40,15 @@ class CreateRoomView:
         )
 
         # --- Lựa chọn số người chơi ---
-        label_font_size = 30
-        try: label_font = pygame.font.SysFont('Arial', label_font_size)
-        except: label_font = pygame.font.Font(None, label_font_size)
+        label_font_size = 20
+        label_font_path = 'assets/fonts/Sans_Flex.ttf'
+
+        # Luôn dùng Font từ file
+        label_font = pygame.font.Font(label_font_path, label_font_size)
+
         label_text_surf = label_font.render('Số người chơi tối đa:', True, pygame.Color('white'))
         label_text_rect = label_text_surf.get_rect(midright=(WIDTH // 2 - 20, 240))
+
         self.background.blit(label_text_surf, label_text_rect)
         button_width, button_height = 100, 40
         self.two_players_button = pygame_gui.elements.UIButton(

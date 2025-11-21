@@ -40,7 +40,7 @@ class BoardView:
         # --- THUỘC TÍNH NÚT QUAY LẠI ---
         self.back_button_rect = pygame.Rect(WIDTH - 130, HEIGHT - 60, 110, 40)
         try:
-            self.back_font = pygame.font.SysFont("Arial", 18, bold=True)
+            self.back_font = pygame.font.SysFont('assets/fonts/Sans_Flex.ttf', 18, bold=True)
         except pygame.error:
             self.back_font = pygame.font.Font(None, 24)
             
