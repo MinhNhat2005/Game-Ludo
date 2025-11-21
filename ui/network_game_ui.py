@@ -29,7 +29,7 @@ class NetworkGameUI:
         try:
             self.status_font = pygame.font.Font('assets/fonts/Sans_Flex.ttf', 24)
         except:
-            self.status_font = pygame.font.SysFont("Arial", 24)
+            self.status_font = pygame.font.SysFont('assets/fonts/Sans_Flex.ttf', 24)
 
         self.back_button_rect = self.board_view.back_button_rect
 

@@ -18,6 +18,14 @@ class GameUI:
         self.bot_turn_timer = 0
         self.bot_turn_delay = 1.0  # 1 giây chờ bot đi
 
+        try:
+            self.font_small = pygame.font.Font('assets/fonts/Sans_Flex.ttf', 20)
+            self.font_medium = pygame.font.Font('assets/fonts/Sans_Flex.ttf', 30)
+        except:
+            # Dùng font mặc định nếu không tìm thấy, đề phòng lỗi
+            self.font_small = pygame.font.Font(None, 20)
+            self.font_medium = pygame.font.Font(None, 30)
+
     # --- Xử lý sự kiện ---
     def handle_events(self, event):
         # Xử lý nút Quay Lại

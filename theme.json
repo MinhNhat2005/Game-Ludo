@@ -1,119 +1,171 @@
 {
-  "defaults": {
-    "colours": {
-      "normal_bg": "#28a745",
-      "hovered_bg": "#218838",
-      "normal_text": "#ffffff",
-      "hovered_text": "#ffffff",
-      "normal_border": "#00000000",
-      "hovered_border": "#00000000"
-    }
-  },
-
-  "button": {
-    "font": {
-      "name": "assets/fonts/Sans_Flex.ttf",
-      "size": "30",
-      "bold": "5"
+    "defaults": {
+      "colours": {
+        "normal_bg": "#28a745",
+        "hovered_bg": "#218838",
+        "normal_text": "#ffffff",
+        "hovered_text": "#ffffff",
+        "normal_border": "#00000000",
+        "hovered_border": "#00000000"
+      }
     },
-    "misc": {
-      "border_width": "0",
-      "shadow_width": "2",
-      "corner_radius": "10"
-    }
-  },
 
-  "#back_button": {
-    "colours": {
-      "normal_bg": "#6c757d",
-      "hovered_bg": "#5a6268",
-      "normal_text": "#ffffff",
-      "hovered_text": "#ffffff",
-      "normal_border": "#00000000",
-      "hovered_border": "#00000000"
-    }
-  },
-
-  "#login_button": {
-    "colours": {
-      "normal_bg": "#3cb371",
-      "hovered_bg": "#2e8b57",
-      "normal_text": "#ffffff",
-      "hovered_text": "#ffffff",
-      "normal_border": "#00000000",
-      "hovered_border": "#00000000"
-    }
-  },
-
-  "#register_button": {
-    "colours": {
-      "normal_bg": "#1e90ff",
-      "hovered_bg": "#187bcd",
-      "normal_text": "#ffffff",
-      "hovered_text": "#ffffff",
-      "normal_border": "#00000000",
-      "hovered_border": "#00000000"
-    }
-  },
-
-  "#exit_button": {
-    "colours": {
-      "normal_bg": "#ff4c4c",
-      "hovered_bg": "#ff1c1c",
-      "normal_text": "#ffffff",
-      "hovered_text": "#ffffff",
-      "normal_border": "#00000000",
-      "hovered_border": "#00000000"
+    "label": {
+        "font": {
+            "name": "assets/fonts/Sans_Flex.ttf",
+            "size": "20"
+        }
     },
-    "misc": {
-      "corner_radius": "10"
-    }
-  },
 
-  "#play_button": {
-    "colours": {
-      "normal_bg": "#28a745",
-      "hovered_bg": "#218838",
-      "normal_text": "#ffffff",
-      "hovered_text": "#ffffff"
-    }
-  },
+    "#history_title": {
+      "font": { 
+        "name": "assets/fonts/Sans_Flex.ttf",
+        "size": "60",         
+        "bold": "1" 
+      },
+      "colours": {
+        "normal_text": "#ffffff" 
+      },
+      "misc": {
+        "text_horiz_alignment": "center"
+      }
+    },
+    
+    
+    "#history_item": {
+      "font": {
+        "name": "assets/fonts/Sans_Flex.ttf",
+        "size": "24"
+      },
+      "misc": {
+        "text_horiz_alignment": "left"
+      }
+    },
 
-  "#rules_button": {
-    "colours": {
-      "normal_bg": "#17a2b8",
-      "hovered_bg": "#117a8b",
-      "normal_text": "#ffffff",
-      "hovered_text": "#ffffff"
-    }
-  },
 
-  "#settings_button": {
-    "colours": {
-      "normal_bg": "#ffc107",
-      "hovered_bg": "#e0a800",
-      "normal_text": "#000000",
-      "hovered_text": "#000000"
-    }
-  },
-
-  "#history_button": {
-    "colours": {
-      "normal_bg": "#6f42c1",
-      "hovered_bg": "#5936a2",
-      "normal_text": "#ffffff",
-      "hovered_text": "#ffffff"
-    }
-  },
-  "#settings_label": {
-    "colours": {
+    "button": {
+      "font": {
+        "name": "assets/fonts/Sans_Flex.ttf",
+        "size": "30",
+        "bold": "1"
+      },
+      "misc": {
+        "border_width": "0",
+        "shadow_width": "2",
+        "corner_radius": "10"
+      }
+    },
+    
+    
+    
+    
+    "#back_button": {
+      "colours": {
+        "normal_bg": "#6c757d",
+        "hovered_bg": "#5a6268",
+        "normal_text": "#ffffff",
+        "hovered_text": "#ffffff",
+        "normal_border": "#00000000",
+        "hovered_border": "#00000000"
+      }
+    },
+  
+    "#login_button": {
+      "colours": {
+        "normal_bg": "#3cb371",
+        "hovered_bg": "#2e8b57",
+        "normal_text": "#ffffff",
+        "hovered_text": "#ffffff",
+        "normal_border": "#00000000",
+        "hovered_border": "#00000000"
+      }
+    },
+  
+    "#register_button": {
+      "colours": {
+        "normal_bg": "#1e90ff",
+        "hovered_bg": "#187bcd",
+        "normal_text": "#ffffff",
+        "hovered_text": "#ffffff",
+        "normal_border": "#00000000",
+        "hovered_border": "#00000000"
+      }
+    },
+  
+    "#exit_button": {
+      "colours": {
+        "normal_bg": "#ff4c4c",
+        "hovered_bg": "#ff1c1c",
+        "normal_text": "#ffffff",
+        "hovered_text": "#ffffff",
+        "normal_border": "#00000000",
+        "hovered_border": "#00000000"
+      },
+      "misc": {
+        "corner_radius": "10"
+      }
+    },
+  
+    "#play_button": {
+      "colours": {
+        "normal_bg": "#28a745",
+        "hovered_bg": "#218838",
+        "normal_text": "#ffffff",
+        "hovered_text": "#ffffff"
+      }
+    },
+  
+    "#rules_button": {
+      "colours": {
+        "normal_bg": "#17a2b8",
+        "hovered_bg": "#117a8b",
+        "normal_text": "#ffffff",
+        "hovered_text": "#ffffff"
+      }
+    },
+  
+    "#settings_button": {
+      "colours": {
+        "normal_bg": "#ffc107",
+        "hovered_bg": "#e0a800",
         "normal_text": "#000000",
         "hovered_text": "#000000"
+      }
     },
-    "font": {
+  
+    "#history_button": {
+      "colours": {
+        "normal_bg": "#6f42c1",
+        "hovered_bg": "#5936a2",
+        "normal_text": "#ffffff",
+        "hovered_text": "#ffffff"
+      }
+    },
+    "#settings_label": {
+      "colours": {
+        "normal_text": "#000000",
+        "hovered_text": "#000000"
+      },
+      "font": {
         "name": "assets/fonts/Sans_Flex.ttf",
         "size": "20"
+      }
+  },
+  "#delete_history_item": {
+      "font": {
+        "name": "assets/fonts/Sans_Flex.ttf",
+        "size": "24" 
+      },
+      "colours": {
+        "normal_bg": "#dc3545", 
+        "hovered_bg": "#c82333",
+        "normal_text": "#ffffff",
+        "hovered_text": "#ffffff"
+      },
+      "misc": {
+        "border_width": "0",
+        "shadow_width": "0"
+      }
     }
-}
-
+  
 }

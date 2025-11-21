@@ -24,6 +24,7 @@ from .game_ui import GameUI
 from .network_game_ui import NetworkGameUI
 from .login_view import LoginView
 from .register_view import RegisterView
+from pathlib import Path
 
 class LudoGUI:
     def __init__(self):
@@ -34,15 +35,20 @@ class LudoGUI:
         self.auth_manager = AuthManager()
         self.logged_in_user_id = None
 
+        PROJECT_ROOT = Path(__file__).parent.parent
+        THEME_FILE_PATH = PROJECT_ROOT / 'theme.json'
+
         pygame.display.set_caption("Cờ Cá Ngựa - Đồ Án")
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         self.clock = pygame.time.Clock()
         self.is_running = True
 
         try:
-            self.ui_manager = pygame_gui.UIManager((WIDTH, HEIGHT), 'theme.json')
+            # 2. Sử dụng đường dẫn tuyệt đối
+            self.ui_manager = pygame_gui.UIManager((WIDTH, HEIGHT), str(THEME_FILE_PATH))
+            logging.info(f"Đã tải theme từ: {THEME_FILE_PATH}")
         except FileNotFoundError:
-            logging.warning("Không tìm thấy file 'theme.json', sử dụng theme mặc định.")
+            logging.warning("Không tìm thấy file 'theme.json' tại đường dẫn tuyệt đối, sử dụng theme mặc định.")
             self.ui_manager = pygame_gui.UIManager((WIDTH, HEIGHT))
 
         self.active_view = None

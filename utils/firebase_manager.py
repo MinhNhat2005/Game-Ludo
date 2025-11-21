@@ -142,3 +142,24 @@ def get_match_history(limit=50):
             'is_loadable': data.get('is_loadable', False)
         })
     return history
+
+def delete_match_history(match_id):
+    """
+    Xóa bản ghi lịch sử game khỏi Firestore dựa trên MatchID.
+    """
+    if not db:
+        logging.warning("Firebase chưa kết nối.")
+        return False
+        
+    doc_ref = _get_match_document(match_id)
+    if not doc_ref:
+        logging.warning(f"Không tìm thấy tài liệu MatchID {match_id} để xóa.")
+        return False
+        
+    try:
+        doc_ref.delete()
+        logging.info(f"Đã xóa thành công tài liệu MatchID: {match_id}")
+        return True
+    except Exception as e:
+        logging.error(f"Lỗi khi xóa MatchID {match_id} khỏi Firebase: {e}")
+        return False
