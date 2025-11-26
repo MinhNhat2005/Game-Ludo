@@ -14,6 +14,11 @@ class LoginView:
         self.user_id = None
         self.status_message = "Nhập Email và mật khẩu"
 
+        # Placeholder text
+        self.username_placeholder = "Nhập Email..."
+        self.password_placeholder = "Nhập mật khẩu..."
+        self.placeholder_font = get_font(20)  # font cho placeholder text, không đậm
+
         # Background gradient
         self.background = pygame.Surface((WIDTH, HEIGHT))
         draw_gradient_background(self.background, (255,140,0), (255,215,0))  # cam→vàng
@@ -22,19 +27,21 @@ class LoginView:
         self._draw_title("ĐĂNG NHẬP")
 
         # UI
-        entry_width = 300; entry_height = 40; spacing = 50
+        entry_width = 300
+        entry_height = 40
         y_start = HEIGHT // 2 - 100
 
         self.username_entry = pygame_gui.elements.UITextEntryLine(
             relative_rect=pygame.Rect((WIDTH//2-150, y_start), (entry_width, entry_height)),
-            manager=self.manager, placeholder_text='Nhập Email...'
+            manager=self.manager
         )
         self.password_entry = pygame_gui.elements.UITextEntryLine(
             relative_rect=pygame.Rect((WIDTH//2-150, y_start+60), (entry_width, entry_height)),
-            manager=self.manager, placeholder_text='Nhập mật khẩu...'
+            manager=self.manager
         )
         self.password_entry.set_text_hidden(True)
 
+        # Buttons
         self.login_button = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((WIDTH//2-150, y_start+130), (300,50)),
             text='ĐĂNG NHẬP',
@@ -48,6 +55,7 @@ class LoginView:
             object_id=pygame_gui.core.ObjectID(class_id="#back_button")
         )
 
+        # Status label
         self.status_label = pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect((WIDTH//2-200, y_start+270), (400,30)),
             text=self.status_message,
@@ -88,6 +96,19 @@ class LoginView:
     def draw(self):
         self.screen.blit(self.background, (0,0))
         self.manager.draw_ui(self.screen)
+
+        # Vẽ placeholder text cho email & password nếu rỗng
+        placeholder_color = (180, 180, 180)
+        if self.username_entry.get_text() == "":
+            surf = self.placeholder_font.render(self.username_placeholder, True, placeholder_color)
+            x = self.username_entry.relative_rect.x + 5
+            y = self.username_entry.relative_rect.y + (self.username_entry.relative_rect.height - surf.get_height()) // 2
+            self.screen.blit(surf, (x, y))
+        if self.password_entry.get_text() == "":
+            surf = self.placeholder_font.render(self.password_placeholder, True, placeholder_color)
+            x = self.password_entry.relative_rect.x + 5
+            y = self.password_entry.relative_rect.y + (self.password_entry.relative_rect.height - surf.get_height()) // 2
+            self.screen.blit(surf, (x, y))
 
     def update(self, time_delta):
         self.manager.update(time_delta)

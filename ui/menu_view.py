@@ -18,7 +18,7 @@ class MenuView:
         self.title_font = pygame.font.Font('assets/fonts/Sans_Flex.ttf', 80)
 
         # --- VẼ TIÊU ĐỀ LÊN BACKGROUND ---
-        title_text = self.title_font.render('Cờ Cá Ngựa', True, pygame.Color('white'))
+        title_text = self.title_font.render('Cờ Cá Ngựa', True, pygame.Color('yellow'))
         title_rect = title_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 150))
         shadow_text = self.title_font.render('Cờ Cá Ngựa', True, pygame.Color('black'))
         shadow_rect = shadow_text.get_rect(center=(WIDTH // 2 + 3, HEIGHT // 2 - 147))

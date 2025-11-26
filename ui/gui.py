@@ -38,7 +38,7 @@ class LudoGUI:
         PROJECT_ROOT = Path(__file__).parent.parent
         THEME_FILE_PATH = PROJECT_ROOT / 'theme.json'
 
-        pygame.display.set_caption("Cờ Cá Ngựa - Đồ Án")
+        pygame.display.set_caption("Cờ Cá Ngựa")
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         self.clock = pygame.time.Clock()
         self.is_running = True

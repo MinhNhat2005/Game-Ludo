@@ -1,4 +1,3 @@
-# core/game_manager.py
 import logging
 from core.piece import Piece
 from core.board import Board
@@ -18,20 +17,22 @@ class GameManager:
         
         self.board = Board(start_x=(WIDTH - CELL*15)//2, start_y=(HEIGHT - CELL*15)//2)
         
-        # 2. Thuộc tính lưu/tải
+        # 2. Thuộc tính lưu/tải (Khởi tạo map ở đây để tránh lỗi Attribute Error)
         self.match_id = match_id_to_load
         self.start_time = datetime.datetime.now()
         self.is_online = is_online
+        self.player_map = {} 
+        self.active_pids = []
         
         # 3. Logic Khởi tạo / Tải
         if match_id_to_load is not None:
-             self.is_loaded_successfully = self._load_game(match_id_to_load)
-             if not self.is_loaded_successfully:
-                 logging.error(f"Không thể tải game MatchID {match_id_to_load}. Bắt đầu game mới.")
-                 self.setup_game(num_players, player_types)
+            self.is_loaded_successfully = self._load_game(match_id_to_load)
+            if not self.is_loaded_successfully:
+                logging.error(f"Không thể tải game MatchID {match_id_to_load}. Bắt đầu game mới.")
+                self.setup_game(num_players, player_types)
         else:
-             self.setup_game(num_players, player_types)
-             
+            self.setup_game(num_players, player_types)
+            
         self.last_move_info = None
 
     def setup_game(self, num_players, player_types):
@@ -40,15 +41,38 @@ class GameManager:
         self.turn = 0
         self.dice_value = None
         self.winner = None
-        self.players = self._init_players()
+        
+        # --- LOGIC KHỞI TẠO MAP VỊ TRÍ (ĐÃ SỬA VÀ ĐỒNG BỘ) ---
+        if num_players == 2:
+            self.active_pids = [0, 1] 
+            self.player_map = {0: 0, 1: 1} # CHẾ ĐỘ CẠNH NHAU
+        elif num_players == 3:
+            self.active_pids = [0, 1, 2] 
+            self.player_map = {0: 0, 1: 1, 2: 2}
+        else:
+            self.active_pids = [0, 1, 2, 3] 
+            self.player_map = {i: i for i in range(4)}
+        
+        # --------------------------------------------------------
+        
+        self.players = self._init_players() # Gọi hàm khởi tạo quân cờ đã sửa
         self.bots = self._init_bots()
-        self.match_id = None 
+        self.match_id = None
 
     def _init_players(self):
+        """Khởi tạo quân cờ sử dụng BOARD ID thực tế."""
         players = []
-        for pid in range(self.num_players):
-            pieces = [Piece(pid, piece_id) for piece_id in range(4)]
+        
+        for slot_id in range(self.num_players):
+            # LẤY BOARD ID THỰC TẾ (0 hoặc 1) TỪ MAP
+            board_id = self.player_map.get(slot_id, slot_id)
+            
+            # QUAN TRỌNG: Khởi tạo quân cờ với BOARD ID thực tế
+            pieces = [Piece(board_id, piece_id) for piece_id in range(4)]
+            
+            # Lưu trữ quân cờ theo Slot ID tuần tự (0, 1) trong self.players
             players.append(pieces)
+            
         return players
 
     def _init_bots(self):
@@ -65,8 +89,7 @@ class GameManager:
     def is_bot_turn(self):
         return self.turn in self.bots
 
-    # --- HÀM BOT VÀ HÀM LƯU/TẢI ĐÃ FIX ---
-
+    # --- HÀM LƯU/TẢI GIỮ NGUYÊN (Cần sửa logic trong _apply_loaded_state) ---
     def save_current_state(self):
         firebase_manager.save_game_state(self, is_loadable=True)
 
@@ -81,31 +104,35 @@ class GameManager:
         return False
         
     def _apply_loaded_state(self, loaded_data):
-        # ... (Logic khôi phục trạng thái giữ nguyên) ...
+        # ... (Tạm thời bỏ qua phần tải game vì nó phức tạp và không liên quan trực tiếp 
+        # đến lỗi hiển thị hiện tại. Tuy nhiên, nó cần được sửa sau này.)
         try:
-            logging.debug("Bắt đầu áp dụng state đã tải...")
             self.num_players = loaded_data['num_players']
             self.turn = loaded_data['turn']
             self.dice_value = loaded_data['dice_value']
             self.winner = None
             
+            self.setup_game(self.num_players, self.player_types) # Thiết lập lại map và types
+
             loaded_mode = loaded_data.get('mode', 'Offline')
             if loaded_mode == 'Bot':
-                 bot_count = self.num_players - 1
-                 self.player_types = ['human'] + ['bot_easy'] * bot_count 
+                bot_count = self.num_players - 1
+                self.player_types = ['human'] + ['bot_easy'] * bot_count 
             else: 
-                 self.player_types = ['human'] * self.num_players
+                self.player_types = ['human'] * self.num_players
             
             self.players = []
             saved_pieces_state = loaded_data['pieces_state']
             if len(saved_pieces_state) != self.num_players:
-                 logging.error("Lỗi state quân cờ: sai số lượng người chơi.")
-                 return False
+                logging.error("Lỗi state quân cờ: sai số lượng người chơi.")
+                return False
 
-            for pid in range(self.num_players):
+            for slot_id in range(self.num_players):
                 player_pieces_list = []
-                for piece_data in saved_pieces_state[pid]:
-                    p = Piece(pid, piece_data['id']) 
+                for piece_data in saved_pieces_state[slot_id]:
+                    # Giả định dữ liệu tải về đã lưu Board ID
+                    board_id = self.player_map.get(slot_id, slot_id)
+                    p = Piece(board_id, piece_data['id']) 
                     p.path_index = piece_data['path_index']
                     p.finished = piece_data['finished']
                     player_pieces_list.append(p)
@@ -128,13 +155,10 @@ class GameManager:
         piece_to_move = bot.choose_move()
         
         if piece_to_move:
-            # move_piece trả về (kicked_piece_obj, just_finished, game_won)
             kicked_piece_obj, just_finished, game_won = self.move_piece(piece_to_move) 
             
-            # TẠO CHUỖI THÔNG BÁO TỪ OBJECT BỊ ĐÁ (an toàn)
             kick_msg = f"Đã đá quân P{kicked_piece_obj.player_id + 1}!" if kicked_piece_obj else None
             
-            # Trả về 5 giá trị cho UI xử lý
             return ("đã di chuyển", kick_msg, dice_roll, just_finished, game_won)
         else:
             self.last_move_info = {
@@ -164,42 +188,56 @@ class GameManager:
 
     def get_movable_pieces(self, player_id, dice_value):
         movable = []
-        path_len = len(self.board.get_path_for_player(player_id))
+        
+        # SỬA: Dùng Board ID thực tế để lấy path_len
+        player_board_id = self.player_map.get(player_id, player_id) 
+        path_len = len(self.board.get_path_for_player(player_board_id)) 
         last_cell_index = path_len - 1
 
         for piece in self.players[player_id]:
             if piece.finished:
                 continue
+            
             if piece.path_index == -1 and dice_value == 6:
                 movable.append(piece)
+            
             elif piece.path_index >= 0:
                 destination_index = piece.path_index + dice_value
                 if destination_index <= last_cell_index:
                     movable.append(piece)
         return movable
 
-    # --- SỬA LỖI TRỌNG TÂM TRONG MOVE_PIECE (KHÔNG XẢY RA LỖI ATTRIBUTE ERROR) ---
+    # --- SỬA LỖI TRỌNG TÂM TRONG MOVE_PIECE (KHẮC PHỤC ÁNH XẠ ĐƯỜNG ĐI) ---
     def move_piece(self, piece_to_move):
         if self.dice_value is None or self.dice_value == -1:
             logging.warning("Move_piece được gọi khi dice_value là None/GameOver")
             return (None, False, False)
 
         dice_rolled = self.dice_value
-        path_len = len(self.board.get_path_for_player(piece_to_move.player_id))
+        
+        # 1. LẤY BOARD ID THỰC TẾ (Board ID: 0 hoặc 1)
+        player_board_id = self.player_map.get(piece_to_move.player_id, piece_to_move.player_id)
+        
+        # 2. Dùng Board ID THỰC TẾ để tính chiều dài đường đi
+        path_len = len(self.board.get_path_for_player(player_board_id))
+        
         was_finished = piece_to_move.finished
         old_index = piece_to_move.path_index 
 
-        piece_to_move.move(dice_rolled, path_len)
+        # 3. Thực hiện di chuyển với path_len ĐÚNG
+        piece_to_move.move(dice_rolled, path_len) 
+
         new_index = piece_to_move.path_index 
         just_finished_this_move = (not was_finished and piece_to_move.finished)
 
+        # 4. Truyền map vào hàm đá quân (giữ nguyên logic đã sửa)
         kicked_piece_obj = rules.check_and_kick_opponent(
             moving_piece=piece_to_move,
             all_players_pieces=self.players,
-            board=self.board
+            board=self.board,
+            player_board_map=self.player_map
         )
 
-        # Cập nhật last_move_info AN TOÀN (chỉ truy cập thuộc tính nếu object tồn tại)
         self.last_move_info = {
             "player_id": piece_to_move.player_id,
             "dice": dice_rolled,
@@ -207,15 +245,19 @@ class GameManager:
             "from_index": old_index,
             "to_index": new_index,
             "action": "moved" if old_index >= 0 else "spawned",
-            # FIX LỖI: Chỉ truy cập player_id nếu kicked_piece_obj không phải là None
             "kicked_piece": {"player_id": kicked_piece_obj.player_id} if kicked_piece_obj else None, 
             "finished": piece_to_move.finished
         }
 
         game_has_winner = False
+        winner_id = None
+
         if just_finished_this_move:
             game_has_winner = self._check_for_winner(piece_to_move.player_id)
+            if game_has_winner:
+                winner_id = piece_to_move.player_id  # <-- Lưu đúng ID người thắng
 
+        # Các điều kiện cho lượt tiếp theo
         if game_has_winner:
             self.dice_value = -1
         elif dice_rolled == 6 or kicked_piece_obj is not None or just_finished_this_move:
@@ -223,15 +265,20 @@ class GameManager:
         else:
             self.next_turn()
 
-        # Trả về đối tượng Piece bị đá (kicked_piece_obj)
-        return (kicked_piece_obj, just_finished_this_move, game_has_winner)
+        return (kicked_piece_obj, just_finished_this_move, winner_id)
+
 
 
     def get_destination_cell(self, piece, dice_value):
+        
+        # SỬA: Lấy Board ID thực tế của quân cờ
+        player_board_id = self.player_map.get(piece.player_id, piece.player_id) 
+        
         if piece.path_index == -1 and dice_value == 6:
-            return self.board.get_spawn_cell(piece.player_id)
+            return self.board.get_spawn_cell(player_board_id) # SỬA: Dùng Board ID
+            
         if piece.path_index >= 0:
-            path = self.board.get_path_for_player(piece.player_id)
+            path = self.board.get_path_for_player(player_board_id) # SỬA: Dùng Board ID
             next_index = piece.path_index + dice_value
             if next_index < len(path):
                 return path[next_index]

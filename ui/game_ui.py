@@ -4,6 +4,7 @@ import logging
 from core.game_manager import GameManager
 from ui.components.board_view import BoardView
 from network.client import get_current_game_state
+from utils import firebase_manager
 
 class GameUI:
     def __init__(self, screen, num_players, player_types, sound_manager):
@@ -12,6 +13,8 @@ class GameUI:
         self.is_running = True
         self.next_screen = None
         self.online_state = None  # lưu trạng thái online từ server
+
+        # Khởi tạo game manager
         self.game_manager = GameManager(num_players=num_players, player_types=player_types, is_online=False)
         self.board_view = BoardView(screen, self.game_manager, self.game_manager.players, self.sound_manager)
 
@@ -22,40 +25,32 @@ class GameUI:
             self.font_small = pygame.font.Font('assets/fonts/Sans_Flex.ttf', 20)
             self.font_medium = pygame.font.Font('assets/fonts/Sans_Flex.ttf', 30)
         except:
-            # Dùng font mặc định nếu không tìm thấy, đề phòng lỗi
             self.font_small = pygame.font.Font(None, 20)
             self.font_medium = pygame.font.Font(None, 30)
 
     # --- Xử lý sự kiện ---
     def handle_events(self, event):
-        # Xử lý nút Quay Lại
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_pos = event.pos
             if self.board_view.back_button_rect.collidepoint(mouse_pos):
                 logging.info("Người chơi nhấn nút Quay Lại, lưu game...")
-                from utils import firebase_manager
 
-                # Lưu trạng thái game lên Firebase
-                # is_loadable = True chỉ khi chế độ Offline hoặc Bot
-                mode = 'Offline' if not self.game_manager.is_online else 'Online'
+                # Chỉ lưu Offline/Bot
+                is_loadable = not self.game_manager.is_online
                 firebase_manager.save_game_state(
                     self.game_manager,
-                    is_loadable=(mode in ['Offline', 'Bot'])
+                    winner_id=None,
+                    is_loadable=is_loadable
                 )
-                logging.info(f"Game đã được lưu. MatchID: {self.game_manager.match_id}, Mode: {mode}")
 
-                # Quay về màn hình trước (ví dụ menu hoặc mode_select)
+                logging.info(f"Game đã lưu. MatchID: {self.game_manager.match_id}")
                 self.is_running = False
                 self.next_screen = 'mode_select'
                 return
 
-        # Xử lý các sự kiện bình thường (offline/online)
+        # Sự kiện bình thường cho game
         if not self.game_manager.is_bot_turn():
-            result = self.board_view.handle_events(event)
-            if result == 'back':
-                self.is_running = False
-                self.next_screen = 'mode_select'
-
+            self.board_view.handle_events(event)
 
     # --- Cập nhật mỗi frame ---
     def update(self, time_delta):
@@ -68,6 +63,7 @@ class GameUI:
                 chosen_piece = bot.choose_move()
                 dice_rolled = self.game_manager.dice_value
 
+                # Hiệu ứng gieo xúc xắc
                 if dice_rolled is not None:
                     for _ in range(5):
                         fake_value = random.randint(1, 6)
@@ -76,28 +72,47 @@ class GameUI:
                     self.board_view.update_dice_display(self.game_manager.turn, dice_rolled)
 
                 if chosen_piece is not None:
-                    kick_msg, just_finished, game_won = self.game_manager.move_piece(chosen_piece)
-                    msg = f"Bot (P{self.game_manager.turn + 1}) gieo được {dice_rolled}." if dice_rolled else f"Bot (P{self.game_manager.turn + 1}) chưa gieo."
-                    if game_won:
-                        msg = f"Bot (P{self.game_manager.turn + 1}) đã THẮNG CUỘC!"
-                        if self.sound_manager: self.sound_manager.play_sfx('win')
-                    elif kick_msg:
-                        msg += f" Đã di chuyển. {kick_msg}"
-                        if self.sound_manager: self.sound_manager.play_sfx('kick')
-                    elif just_finished:
-                        msg += " Đã về 1 quân!"
-                        if self.sound_manager: self.sound_manager.play_sfx('done')
+                    kicked_piece, just_finished, winner_id = self.game_manager.move_piece(chosen_piece)
+
+                    if winner_id is not None:
+                        # --- Trận đấu kết thúc ---
+                        msg = f"P{winner_id + 1} đã THẮNG CUỘC!"
+                        if self.sound_manager:
+                            self.sound_manager.play_sfx('win')  # Phát âm thanh kết thúc
+                        # Lưu ngay kết thúc game
+                        firebase_manager.save_game_state(
+                            self.game_manager,
+                            winner_id=winner_id,
+                            is_loadable=False
+                        )
                     else:
-                        msg += " Đã di chuyển."
+                        # --- Lượt bình thường ---
+                        msg = f"Bot (P{self.game_manager.turn + 1}) gieo được {dice_rolled}."
+                        if kicked_piece:
+                            msg += f" Đã đá quân P{kicked_piece.player_id + 1}!"
+                            if self.sound_manager: self.sound_manager.play_sfx('kick')
+                        elif just_finished:
+                            msg += " Đã về 1 quân!"
+                            if self.sound_manager: self.sound_manager.play_sfx('done')
+                        else:
+                            piece_id = chosen_piece.id if hasattr(chosen_piece, 'id') else '?'
+                            msg += f" Đã di chuyển quân {piece_id + 1}."
+                            if self.sound_manager: self.sound_manager.play_sfx('move')
                 else:
-                    msg = f"Bot (P{self.game_manager.turn + 1}) gieo được {dice_rolled} nhưng không có nước đi." if dice_rolled else f"Bot (P{self.game_manager.turn + 1}) không có nước đi."
+                    msg = f"Bot (P{self.game_manager.turn + 1}) gieo được {dice_rolled} : không có nước đi." \
+                        if dice_rolled else f"Bot (P{self.game_manager.turn + 1}) không có nước đi."
                     self.game_manager.next_turn()
                 self.board_view.msg = msg
 
+        # --- NGƯỜI CHƠI: Xử lý tương tự (nếu cần) ---
+        # Nếu bạn có luồng người chơi thật, bạn cũng nên xử lý winner_id và sound tương tự
+        # Ví dụ khi gọi self.game_manager.move_piece(piece_to_move)
+        
         # --- ONLINE: Lấy trạng thái từ server ---
         state = get_current_game_state()
         if state.get('room_id') is not None:
-            self.update_game_state(state)  # cập nhật online_state, msg, dice, GameManager
+            self.update_game_state(state)
+
 
     # --- Vẽ mỗi frame ---
     def draw(self):
@@ -106,34 +121,26 @@ class GameUI:
         else:
             self.board_view.draw()
 
-
     # --- Cập nhật trạng thái game từ server ---
     def update_game_state(self, state):
-        """Cập nhật trạng thái game online từ server vào game_manager và board_view."""
-        self.online_state = state  # Lưu state ngay
+        self.online_state = state
 
-        # --- Cập nhật lượt và giá trị xúc xắc ---
-        current_turn = state.get('current_turn', self.gm.turn)
+        current_turn = state.get('current_turn', self.game_manager.turn)
         dice_value = state.get('dice_value', None)
-        self.gm.turn = current_turn
-        self.gm.dice_value = dice_value
+        self.game_manager.turn = current_turn
+        self.game_manager.dice_value = dice_value
 
-        # --- Cập nhật trạng thái quân cờ từng người ---
         server_players = state.get('players', None)
         if server_players:
-            # Giả sử self.gm.players là list[list[Piece]]
             for i, player_pieces_state in enumerate(server_players):
                 for j, piece_state in enumerate(player_pieces_state):
-                    piece = self.gm.players[i][j]
+                    piece = self.game_manager.players[i][j]
                     piece.path_index = piece_state.get('path_index', piece.path_index)
                     piece.finished = piece_state.get('finished', piece.finished)
 
-        # --- Cập nhật hiển thị xúc xắc ---
-        if dice_value is not None:
-            if hasattr(self.board_view, 'update_dice_display'):
-                self.board_view.update_dice_display(current_turn, dice_value)
+        if dice_value is not None and hasattr(self.board_view, 'update_dice_display'):
+            self.board_view.update_dice_display(current_turn, dice_value)
 
-        # --- Cập nhật message hiển thị trên board ---
         server_msg = state.get('last_move_info') or state.get('last_message')
         if server_msg:
             self.board_view.msg = server_msg
@@ -142,4 +149,4 @@ class GameUI:
             if movable:
                 self.board_view.msg = f"Lượt P{current_turn + 1}, gieo được {dice_value}." if dice_value else f"Lượt P{current_turn + 1} chưa gieo xúc xắc."
             else:
-                self.board_view.msg = f"Lượt P{current_turn + 1}, gieo được {dice_value} nhưng không có nước đi." if dice_value else f"Lượt P{current_turn + 1} chưa gieo xúc xắc."
+                self.board_view.msg = f"Lượt P{current_turn + 1}, gieo được {dice_value} : không có nước đi." if dice_value else f"Lượt P{current_turn + 1} chưa gieo xúc xắc."

@@ -15,7 +15,7 @@ class SettingsView:
         # --- Nền tổng thể ---
         try:
             self.background = pygame.transform.scale(
-                pygame.image.load('assets/images/background.png').convert(), 
+                pygame.image.load('assets/images/board.png').convert(), 
                 (WIDTH, HEIGHT)
             )
         except pygame.error:
@@ -28,7 +28,7 @@ class SettingsView:
         except pygame.error:
             self.title_font = pygame.font.Font(None, 60)
 
-        title_text = self.title_font.render('CÀI ĐẶT', True, pygame.Color('white'))
+        title_text = self.title_font.render('CÀI ĐẶT', True, pygame.Color('blue'))
         title_rect = title_text.get_rect(center=(WIDTH // 2, 80))
         self.background.blit(title_text, title_rect)
 
@@ -169,13 +169,29 @@ class SettingsView:
             object_id="#settings_value"
         )
 
-        # --- Nút Quay Lại ---
+        # Nút Quay Lại
         self.back_button = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT - 100), (200, 50)),
-            text='QUAY LẠI MENU',
+            text='QUAY LẠI',
             manager=self.manager,
             object_id='#back_button'
         )
+
+        # Thêm icon nhỏ bên trái nút
+        back_icon = pygame.image.load("assets/images/back.jpg").convert_alpha()
+        back_icon = pygame.transform.smoothscale(back_icon, (20, 20))  # giảm kích thước xuống 20x20
+
+        # Đặt icon sát chữ, căn giữa theo chiều cao nút
+        icon_x = (WIDTH // 2 - 100) + 10  # cách mép trái 10px
+        icon_y = (HEIGHT - 100) + (50 - 20) // 2  # căn giữa theo chiều cao nút
+        self.back_icon_image = pygame_gui.elements.UIImage(
+            relative_rect=pygame.Rect((icon_x, icon_y), (20, 20)),
+            image_surface=back_icon,
+            manager=self.manager
+        )
+
+
+
 
     # --- Xử lý sự kiện ---
     def handle_events(self, event):

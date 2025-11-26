@@ -12,7 +12,8 @@ FIREBASE_CONFIG = {
     "storageBucket": "ludo-71297.firebasestorage.app",
     "messagingSenderId": "478136883068",
     "appId": "1:478136883068:web:b8bf85b22640951c9af6f9",
-    "databaseURL": "https://ludo-71297-default-rtdb.firebaseio.com/",  # <--- Sửa đúng URL
+    "databaseURL": "https://ludo-71297-default-rtdb.asia-southeast1.firebasedatabase.app"
+
 }
 
 # ************************************************

@@ -12,10 +12,13 @@ class PlayerSelectionView:
         self.num_players = 0 # Sẽ lưu số người chơi được chọn
 
         self.background = pygame.Surface((WIDTH, HEIGHT))
-        self.background.fill(pygame.Color('#1a1a1a'))
+        self.background = pygame.transform.scale(
+            pygame.image.load('assets/images/board.png').convert(),
+            (WIDTH, HEIGHT)
+        )
         
         title_font = pygame.font.Font('assets/fonts/Sans_Flex.ttf', 80)
-        title_text = title_font.render('CHỌN SỐ NGƯỜI CHƠI', True, pygame.Color('white'))
+        title_text = title_font.render('CHỌN SỐ NGƯỜI CHƠI', True, pygame.Color('blue'))
         title_rect = title_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 150))
         self.background.blit(title_text, title_rect)
 
@@ -35,11 +38,27 @@ class PlayerSelectionView:
             text='4 NGƯỜI CHƠI',
             manager=self.manager
         )
+        # --- Nút quay lại ---
         self.back_button = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((30, HEIGHT - 80), (150, 50)),
+            relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT - 100), (200, 50)),
             text='QUAY LẠI',
+            manager=self.manager,
+            object_id='#back_button'
+        )
+
+        # --- Thêm icon nhỏ bên trái nút ---
+        back_icon = pygame.image.load("assets/images/back.jpg").convert_alpha()
+        back_icon = pygame.transform.smoothscale(back_icon, (20, 20))  # icon nhỏ
+
+        # Icon đặt sát chữ, căn giữa theo chiều cao nút
+        icon_x = (WIDTH // 2 - 100) + 10  # cách mép trái nút 10px
+        icon_y = (HEIGHT - 100) + (50 - 20) // 2  # căn giữa theo chiều cao nút
+        self.back_icon_image = pygame_gui.elements.UIImage(
+            relative_rect=pygame.Rect((icon_x, icon_y), (20, 20)),
+            image_surface=back_icon,
             manager=self.manager
         )
+
 
     def handle_events(self, event):
         if event.type == pygame_gui.UI_BUTTON_PRESSED:

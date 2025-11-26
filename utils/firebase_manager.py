@@ -1,4 +1,3 @@
-# utils/firebase_manager.py
 import firebase_admin
 from firebase_admin import credentials, firestore
 import logging
@@ -40,9 +39,7 @@ def save_game_state(gm, winner_id=None, is_loadable=True):
         logging.warning("Firebase chưa kết nối!")
         return None
 
-    logging.info("Bắt đầu lưu trạng thái game...")
-
-    # Chuyển trạng thái quân cờ
+    # --- Chuyển trạng thái quân cờ ---
     pieces_state = {}
     for pid, player_pieces in enumerate(gm.players):
         pieces_state[f'player_{pid}'] = [
@@ -75,25 +72,32 @@ def save_game_state(gm, winner_id=None, is_loadable=True):
         match_data['EndTime'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     try:
-        if gm.match_id is None:
-            doc_ref = db.collection('ludo_matches').document()
-            doc_ref.set(match_data)
-            gm.match_id = doc_ref.id
-            logging.info(f"Đã lưu game mới với MatchID: {gm.match_id}")
-        else:
+        if gm.match_id:
+            # --- Update document cũ nếu đã có match_id ---
             doc_ref = db.collection('ludo_matches').document(gm.match_id)
             doc_ref.update(match_data)
             logging.info(f"Đã cập nhật game MatchID: {gm.match_id}")
+        else:
+            # --- Tạo document mới chỉ khi chưa có match_id và chưa kết thúc ---
+            if winner_id is None:
+                doc_ref = db.collection('ludo_matches').document()
+                doc_ref.set(match_data)
+                gm.match_id = doc_ref.id
+                logging.info(f"Đã lưu game mới với MatchID: {gm.match_id}")
+            else:
+                # Trường hợp ván kết thúc nhưng chưa có match_id (hiếm)
+                doc_ref = db.collection('ludo_matches').document()
+                doc_ref.set(match_data)
+                gm.match_id = doc_ref.id
+                logging.info(f"Đã lưu game kết thúc với MatchID: {gm.match_id}")
     except Exception as e:
         logging.error(f"Lỗi khi lưu game vào Firebase: {e}")
 
     logging.debug(f"Data đang lưu:\n{match_data}")
     return gm.match_id
 
+# --- Các hàm còn lại giữ nguyên ---
 def load_game_state(match_id):
-    """
-    Load FinalState từ Firebase (chỉ dùng cho Offline/Bot)
-    """
     if not db:
         logging.warning("Firebase chưa kết nối.")
         return None
@@ -106,7 +110,6 @@ def load_game_state(match_id):
             data = doc.to_dict()
             logging.info(f"Đã tải MatchID {match_id} từ Firebase.")
             final_state = data.get('FinalState')
-            # Chỉ load Offline/Bot
             if final_state and final_state.get('mode') in ['Offline', 'Bot']:
                 return final_state
             return None
@@ -144,9 +147,6 @@ def get_match_history(limit=50):
     return history
 
 def delete_match_history(match_id):
-    """
-    Xóa bản ghi lịch sử game khỏi Firestore dựa trên MatchID.
-    """
     if not db:
         logging.warning("Firebase chưa kết nối.")
         return False

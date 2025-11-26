@@ -15,17 +15,15 @@ class HistoryUI:
         self.background = pygame.Surface((WIDTH, HEIGHT))
         self.background.fill((30, 30, 30))
 
-        # --- Tiêu đề LỊCH SỬ (Render trực tiếp) ---
+        # --- Tiêu đề LỊCH SỬ ---
         try:
-            # Font size 50, bạn có thể điều chỉnh tùy ý
             self.title_font = pygame.font.Font('assets/fonts/Sans_Flex.ttf', 50)
         except:
             self.title_font = pygame.font.Font(None, 50) 
             
-        title_text = self.title_font.render('LỊCH SỬ', True, pygame.Color('white'))
+        title_text = self.title_font.render('LỊCH SỬ', True, pygame.Color('yellow'))
         title_rect = title_text.get_rect(center=(WIDTH // 2, 50)) 
         
-        # Thêm đổ bóng
         shadow_text = self.title_font.render('LỊCH SỬ', True, pygame.Color('black'))
         shadow_rect = shadow_text.get_rect(center=(WIDTH // 2 + 2, 52))
         
@@ -34,22 +32,37 @@ class HistoryUI:
 
         # --- Nút quay lại ---
         self.back_button = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((20, HEIGHT - 70, 160, 50)),
-            text='Quay lại',
+            relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT - 100), (200, 50)),
+            text='QUAY LẠI',
             manager=self.manager,
-            object_id="#back_button"
+            object_id='#back_button'
         )
 
-        # --- Lấy lịch sử và LỌC TRÙNG LẶP (Tạm thời) ---
+        # Icon nhỏ bên trái nút
+        back_icon = pygame.image.load("assets/images/back.jpg").convert_alpha()
+        back_icon = pygame.transform.smoothscale(back_icon, (20, 20))
+        icon_x = (WIDTH // 2 - 100) + 10
+        icon_y = (HEIGHT - 100) + (50 - 20) // 2
+        self.back_icon_image = pygame_gui.elements.UIImage(
+            relative_rect=pygame.Rect((icon_x, icon_y), (20, 20)),
+            image_surface=back_icon,
+            manager=self.manager
+        )
+
+        # --- Lấy lịch sử và lọc trùng lặp ---
         raw_history = firebase_manager.get_match_history(limit=100)
-        
-        # Lọc để chỉ giữ lại bản ghi mới nhất cho mỗi MatchID
         unique_matches = {}
         for match in raw_history:
             match_id = match.get('MatchID')
             if match_id:
-                unique_matches[match_id] = match
-        
+                # Nếu đã có, chỉ giữ bản kết thúc
+                if match_id in unique_matches:
+                    if not unique_matches[match_id]['is_loadable'] and match.get('is_loadable'):
+                        continue
+                    if unique_matches[match_id]['is_loadable'] and not match.get('is_loadable'):
+                        unique_matches[match_id] = match
+                else:
+                    unique_matches[match_id] = match
         self.history_data = list(unique_matches.values())
 
         # --- Scroll container ---
@@ -61,48 +74,49 @@ class HistoryUI:
             manager=self.manager
         )
         
-        # --- Button lịch sử & Nút Xóa ---
+        # --- Tạo nút lịch sử & Xóa ---
         self.buttons = []
-        self.delete_buttons = {} # Dictionary ánh xạ nút xóa tới MatchID
-        
+        self.delete_buttons = {}
         button_height = 50
         spacing = 10
-        delete_button_width = 50 # Chiều rộng nút '...'
-        
-        # Chiều rộng nút lịch sử chính
+        delete_button_width = 50
         main_button_width = self.scroll_container.relative_rect.width - 20 - delete_button_width - spacing
-        
         date_format_in = '%Y-%m-%d %H:%M:%S'
-        
+
         for i, match in enumerate(self.history_data):
             match_id = match['MatchID']
             status = "Đang chơi" if match.get('is_loadable') else "Kết thúc"
             mode = match.get('Mode', 'Offline')
-            
-            # Xử lý WinnerPlayerID
+
+            # Xử lý WinnerPlayerID đúng
             winner_id = match.get('WinnerPlayerID')
             if winner_id is None or winner_id == '-':
                 winner = 'Chưa xác định'
-            elif winner_id == 0 or winner_id == '0':
-                # Giả định 0 là Bot nếu Mode là Bot
-                winner = 'Bot' if mode == 'Bot' else 'Player 1' 
             else:
-                winner = str(winner_id)
-            
-            # Xử lý StartTime (Chuyển chuỗi từ Firebase sang định dạng hiển thị)
-            timestamp_str = match.get('StartTime')
-            dt_str = '-' 
+                winner_id = int(winner_id)
+                if winner_id < match.get('NumPlayers', 0):
+                    if mode == 'Bot' and winner_id != 0:
+                        winner = f'Bot {winner_id}'
+                    elif mode == 'Bot' and winner_id == 0:
+                        winner = 'Player 1'
+                    else:
+                        winner = f'Player {winner_id + 1}'
+                else:
+                    winner = 'Chưa xác định'
 
+            # Xử lý thời gian
+            timestamp_str = match.get('StartTime')
+            dt_str = '-'
             if isinstance(timestamp_str, str) and timestamp_str:
                 try:
-                    dt_object = datetime.strptime(timestamp_str, date_format_in) 
-                    dt_str = dt_object.strftime('%d/%m/%Y %H:%M:%S') 
+                    dt_object = datetime.strptime(timestamp_str, date_format_in)
+                    dt_str = dt_object.strftime('%d/%m/%Y %H:%M:%S')
                 except ValueError:
                     dt_str = 'Lỗi định dạng'
 
             text = f"ID: {match_id} | Mode: {mode} | Status: {status} | Winner: {winner} | Thời gian: {dt_str}"
 
-            # 1. Nút Lịch sử Chính (Thông tin trận đấu)
+            # Nút chính
             btn = pygame_gui.elements.UIButton(
                 relative_rect=pygame.Rect(
                     (0, i*(button_height + spacing), main_button_width, button_height)
@@ -114,7 +128,7 @@ class HistoryUI:
             )
             self.buttons.append(btn)
 
-            # 2. Nút Xóa (Dấu ba chấm)
+            # Nút xóa
             delete_btn = pygame_gui.elements.UIButton(
                 relative_rect=pygame.Rect(
                     (main_button_width + spacing, i*(button_height + spacing), delete_button_width, button_height)
@@ -124,12 +138,12 @@ class HistoryUI:
                 container=self.scroll_container,
                 object_id="#delete_history_item"
             )
-            
-            self.delete_buttons[delete_btn] = match_id # Lưu MatchID
-            
-        # --- Cập nhật content_height cho scroll ---
+            self.delete_buttons[delete_btn] = match_id
+
+        # --- Cập nhật scroll ---
         total_height = len(self.history_data) * (button_height + spacing)
         self.scroll_container.set_scrollable_area_dimensions((self.scroll_container.relative_rect.width, total_height))
+
 
     def handle_events(self, event):
         self.manager.process_events(event)

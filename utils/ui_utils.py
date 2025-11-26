@@ -1,19 +1,24 @@
+# utils/ui_utils.py
 import pygame
+from pathlib import Path
 
-def draw_gradient_background(surface, color_top, color_bottom):
-    """Vẽ gradient từ trên xuống dưới"""
+def get_font(size):
+    """Trả về font pygame đúng với size."""
+    font_path = Path(__file__).parent.parent / 'assets/fonts/Sans_Flex.ttf'
+    try:
+        return pygame.font.Font(str(font_path), size)
+    except FileNotFoundError:
+        print(f"WARNING: Font không tìm thấy tại {font_path}, dùng default font")
+        return pygame.font.SysFont(None, size)
+
+def draw_gradient_background(surface, top_color, bottom_color):
+    """Vẽ gradient lên surface."""
     height = surface.get_height()
-    width = surface.get_width()
     for y in range(height):
         ratio = y / height
-        r = int(color_top[0] * (1 - ratio) + color_bottom[0] * ratio)
-        g = int(color_top[1] * (1 - ratio) + color_bottom[1] * ratio)
-        b = int(color_top[2] * (1 - ratio) + color_bottom[2] * ratio)
-        pygame.draw.line(surface, (r, g, b), (0, y), (width, y))
-
-def get_font(size=60):
-    """Font Unicode-safe, fallback nếu không tìm thấy .ttf"""
-    try:
-        return pygame.font.Font('assets/fonts/NotoSans-Regular.ttf', size)
-    except FileNotFoundError:
-        return pygame.font.Font(pygame.font.get_default_font(), size)
+        color = (
+            int(top_color[0] * (1 - ratio) + bottom_color[0] * ratio),
+            int(top_color[1] * (1 - ratio) + bottom_color[1] * ratio),
+            int(top_color[2] * (1 - ratio) + bottom_color[2] * ratio),
+        )
+        pygame.draw.line(surface, color, (0, y), (surface.get_width(), y))

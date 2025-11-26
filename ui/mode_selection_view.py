@@ -11,7 +11,7 @@ class ModeSelectionView:
         self.next_screen = None
 
         self.background = pygame.transform.scale(
-            pygame.image.load('assets/images/background.png').convert(),
+            pygame.image.load('assets/images/board.png').convert(),
             (WIDTH, HEIGHT)
         )
         
@@ -21,7 +21,7 @@ class ModeSelectionView:
         except pygame.error:
             self.title_font = pygame.font.Font(None, 60)
 
-        title_text = self.title_font.render('CHỌN CHẾ ĐỘ CHƠI', True, pygame.Color('white'))
+        title_text = self.title_font.render('CHỌN CHẾ ĐỘ CHƠI', True, pygame.Color('blue'))
         title_rect = title_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 150))
         shadow_text = self.title_font.render('CHỌN CHẾ ĐỘ CHƠI', True, pygame.Color('black'))
         shadow_rect = shadow_text.get_rect(center=(WIDTH // 2 + 3, HEIGHT // 2 - 147))
@@ -43,12 +43,27 @@ class ModeSelectionView:
             text='CHƠI ONLINE',
             manager=self.manager
         )
+        # --- Nút quay lại ---
         self.back_button = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((30, HEIGHT - 80), (150, 50)),
+            relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT - 100), (200, 50)),
             text='QUAY LẠI',
             manager=self.manager,
             object_id='#back_button'
         )
+
+        # --- Thêm icon nhỏ bên trái nút ---
+        back_icon = pygame.image.load("assets/images/back.jpg").convert_alpha()
+        back_icon = pygame.transform.smoothscale(back_icon, (20, 20))  # icon nhỏ
+
+        # Icon đặt sát chữ, căn giữa theo chiều cao nút
+        icon_x = (WIDTH // 2 - 100) + 10  # cách mép trái nút 10px
+        icon_y = (HEIGHT - 100) + (50 - 20) // 2  # căn giữa theo chiều cao nút
+        self.back_icon_image = pygame_gui.elements.UIImage(
+            relative_rect=pygame.Rect((icon_x, icon_y), (20, 20)),
+            image_surface=back_icon,
+            manager=self.manager
+        )
+
 
     def handle_events(self, event):
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
