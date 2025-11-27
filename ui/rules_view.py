@@ -13,7 +13,7 @@ class RulesView:
         # --- Sử dụng hình nền cho nhất quán ---
         try:
             self.background = pygame.transform.scale(
-                pygame.image.load('assets/images/board.png').convert(),
+                pygame.image.load('assets/images/Sanh.png').convert(),
                 (WIDTH, HEIGHT)
             )
         except pygame.error:
@@ -23,12 +23,12 @@ class RulesView:
         # --- Tiêu đề màn hình ---
         try:
             #self.title_font = pygame.font.SysFont('Arial', 60, bold=True)
-            self.title_font = pygame.font.Font('assets/fonts/Sans_Flex.ttf', 80)
+            self.title_font = pygame.font.Font('assets/fonts/Sans_Flex.ttf', 70)
         except pygame.error:
             self.title_font = pygame.font.Font(None, 60) # Font dự phòng
 
-        title_text = self.title_font.render('LUẬT CHƠI', True, pygame.Color('blue'))
-        title_rect = title_text.get_rect(center=(WIDTH // 2, 100))
+        title_text = self.title_font.render('LUẬT CHƠI', True, pygame.Color('yellow'))
+        title_rect = title_text.get_rect(center=(WIDTH // 2, 130))
         self.background.blit(title_text, title_rect)
 
         # --- Nội dung luật chơi (sử dụng định dạng giống HTML) ---

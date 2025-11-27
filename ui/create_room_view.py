@@ -22,7 +22,7 @@ class CreateRoomView:
 
         # --- Giao diện ---
         self.background = pygame.transform.scale(
-            pygame.image.load('assets/images/black.png').convert(),
+            pygame.image.load('assets/images/Sanh.png').convert(),
             (WIDTH, HEIGHT)
         
         )

@@ -30,7 +30,7 @@ class ModeSelectionView:
 
         self.offline_button = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((WIDTH // 2 - 150, HEIGHT // 2 - 50), (300, 50)),
-            text='CHƠI OFFLINE (2-4 NGƯỜI)',
+            text='CHƠI OFFLINE',
             manager=self.manager
         )
         self.bot_button = pygame_gui.elements.UIButton(

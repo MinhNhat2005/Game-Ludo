@@ -188,14 +188,15 @@
   },
 
   "#settings_label": {
-    "colours": {
-      "normal_text": "#000000",
-      "hovered_text": "#000000"
-    },
-    "font": {
-      "name": "assets/fonts/Sans_Flex.ttf",
-      "size": "20"
-    }
+  "colours": {
+    "normal_text": "#FFFFFF",
+    "hovered_text": "#FFFFFF"
+  },
+  "font": {
+    "name": "assets/fonts/Sans_Flex.ttf",
+    "size": "24"
+  }
+
   },
 
   "#delete_history_item": {

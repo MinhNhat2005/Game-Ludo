@@ -11,11 +11,11 @@ class RegisterView:
         self.auth_manager = AuthManager()
         self.is_running = True
         self.next_screen = None
-        self.status_message = "Tạo tài khoản mới (Cần Email hợp lệ)"
+        self.status_message = "Tạo tài khoản mới"
 
         # Placeholder text
-        self.username_placeholder = "Email hợp lệ"
-        self.password_placeholder = "Mật khẩu (>=6 ký tự)"
+        self.username_placeholder = "Nhập Email"
+        self.password_placeholder = "Nhập mật khẩu"
         self.placeholder_font = get_font(20)  # font cho placeholder, bình thường, không đậm
 
         # Background gradient

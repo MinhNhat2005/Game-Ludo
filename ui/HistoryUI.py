@@ -12,8 +12,13 @@ class HistoryUI:
         self.next_screen = None
 
         # --- Nền ---
-        self.background = pygame.Surface((WIDTH, HEIGHT))
-        self.background.fill((30, 30, 30))
+        try:
+            bg = pygame.image.load("assets/images/Sanh.png").convert()
+            self.background = pygame.transform.scale(bg, (WIDTH, HEIGHT))
+        except pygame.error:
+            # fallback nếu không có ảnh nền
+            self.background = pygame.Surface((WIDTH, HEIGHT))
+            self.background.fill((30, 30, 30))
 
         # --- Tiêu đề LỊCH SỬ ---
         try:

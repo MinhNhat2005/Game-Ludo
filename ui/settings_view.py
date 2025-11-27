@@ -15,7 +15,7 @@ class SettingsView:
         # --- Nền tổng thể ---
         try:
             self.background = pygame.transform.scale(
-                pygame.image.load('assets/images/board.png').convert(), 
+                pygame.image.load('assets/images/Sanh.png').convert(), 
                 (WIDTH, HEIGHT)
             )
         except pygame.error:
@@ -28,8 +28,8 @@ class SettingsView:
         except pygame.error:
             self.title_font = pygame.font.Font(None, 60)
 
-        title_text = self.title_font.render('CÀI ĐẶT', True, pygame.Color('blue'))
-        title_rect = title_text.get_rect(center=(WIDTH // 2, 80))
+        title_text = self.title_font.render('CÀI ĐẶT', True, pygame.Color('yellow'))
+        title_rect = title_text.get_rect(center=(WIDTH // 2, 150))
         self.background.blit(title_text, title_rect)
 
         # --- Bố cục chung ---
@@ -44,7 +44,7 @@ class SettingsView:
         start_x_value = start_x_slider + slider_width + 10
 
         # --- Khung trắng bao quanh tất cả slider/label ---
-        padding = 20
+        """padding = 20
         top_y = setting_y_start - padding
         bottom_y = setting_y_start + 4 * row_height + slider_height + padding  # 4 slider
         left_x = start_x_label - padding
@@ -55,7 +55,7 @@ class SettingsView:
             pygame.Color('white'),
             pygame.Rect(left_x, top_y, right_x - left_x, bottom_y - top_y),
             border_radius=12
-        )
+        )"""
 
         # --- Slider và label ---
         y_pos = setting_y_start
